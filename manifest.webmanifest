@@ -1,0 +1,23 @@
+{
+  "id": "./?rytm-test",
+  "name": "Rytm – wersja testowa",
+  "short_name": "Rytm test",
+  "lang": "pl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef5f6",
+  "theme_color": "#b3402e",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
