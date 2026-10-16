@@ -105,7 +105,7 @@
     const lastBackup = () => store.status().ostatniaKopia;
 
     /* ---------- attendance (Frekwencja): training days, start day, skipped days — one record in meta ---------- */
-    const attRecord = a => ({ days: (a.days || []).slice(), from: a.from || null, cancelled: Object.assign({}, a.cancelled || {}) });
+    const attRecord = a => ({ days: (a.days || []).slice(), from: a.from || null, cancelled: Object.assign({}, a.cancelled || {}), absent: Object.assign({}, a.absent || {}) });
     // null = never saved (the app then uses Monday to Saturday from the first swim)
     function loadAttendance() { const r = store.get("meta", "attendance"); return r ? copy(attRecord(r)) : null; }
     const saveAttendance = a => commit(diff("meta", a ? new Map([["attendance", attRecord(a)]]) : new Map(), metaOnly("attendance")));

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbeaa6"/><stop offset=".45" stop-color="#e2b23c"/><stop offset=".75" stop-color="#c4901c"/><stop offset="1" stop-color="#f3d27a"/></linearGradient></defs>
+<g fill="url(#g)" stroke="url(#g)" color="#c4901c">
+  <path d="M44.71,89.63 L42.41,89.23 L40.13,88.70 L37.90,88.02 L35.70,87.21 L33.57,86.26 L31.49,85.19 L29.48,83.99 L27.56,82.66 L25.71,81.23 L23.96,79.68 L22.31,78.02 L20.76,76.27 L19.33,74.43 L18.00,72.50 L16.80,70.50 L15.73,68.42 L14.79,66.28 L13.97,64.09 L13.30,61.85 L12.76,59.58 L12.37,57.27 L12.11,54.95 L12.00,52.61 L12.04,50.28 L12.22,47.95 L12.54,45.63 L13.00,43.34 L13.60,41.08 L14.34,38.86 L15.22,36.70 L16.22,34.59 L17.36,32.54 L18.62,30.57 L19.99,28.68 L21.48,26.88 L23.08,25.18 L24.78,23.57 L26.58,22.08 L28.46,20.69 L30.43,19.43" fill="none" stroke="currentColor" stroke-width="1.30" stroke-linecap="round"/>
+  <path d="M0,0 Q5.72,-4.21 12.72,0 Q5.72,4.21 0,0 Z" transform="translate(39.01,88.38) rotate(-125.19)"/>
+  <path d="M0,0 Q5.72,-4.21 12.72,0 Q5.72,4.21 0,0 Z" transform="translate(39.01,88.38) rotate(-201.19)"/>
+  <path d="M0,0 Q5.47,-4.02 12.15,0 Q5.47,4.02 0,0 Z" transform="translate(28.51,83.34) rotate(-107.56)"/>
+  <path d="M0,0 Q5.47,-4.02 12.15,0 Q5.47,4.02 0,0 Z" transform="translate(28.51,83.34) rotate(-183.56)"/>
+  <path d="M0,0 Q5.21,-3.83 11.58,0 Q5.21,3.83 0,0 Z" transform="translate(20.03,75.36) rotate(-89.94)"/>
+  <path d="M0,0 Q5.21,-3.83 11.58,0 Q5.21,3.83 0,0 Z" transform="translate(20.03,75.36) rotate(-165.94)"/>
+  <path d="M0,0 Q4.95,-3.64 11.01,0 Q4.95,3.64 0,0 Z" transform="translate(14.36,65.19) rotate(-72.31)"/>
+  <path d="M0,0 Q4.95,-3.64 11.01,0 Q4.95,3.64 0,0 Z" transform="translate(14.36,65.19) rotate(-148.31)"/>
+  <path d="M0,0 Q4.70,-3.45 10.44,0 Q4.70,3.45 0,0 Z" transform="translate(12.04,53.78) rotate(-54.69)"/>
+  <path d="M0,0 Q4.70,-3.45 10.44,0 Q4.70,3.45 0,0 Z" transform="translate(12.04,53.78) rotate(-130.69)"/>
+  <path d="M0,0 Q4.44,-3.27 9.87,0 Q4.44,3.27 0,0 Z" transform="translate(13.28,42.20) rotate(-37.06)"/>
+  <path d="M0,0 Q4.44,-3.27 9.87,0 Q4.44,3.27 0,0 Z" transform="translate(13.28,42.20) rotate(-113.06)"/>
+  <path d="M0,0 Q4.19,-3.08 9.30,0 Q4.19,3.08 0,0 Z" transform="translate(17.97,31.55) rotate(-19.44)"/>
+  <path d="M0,0 Q4.19,-3.08 9.30,0 Q4.19,3.08 0,0 Z" transform="translate(17.97,31.55) rotate(-95.44)"/>
+  <path d="M0,0 Q3.93,-2.89 8.73,0 Q3.93,2.89 0,0 Z" transform="translate(25.67,22.81) rotate(-1.81)"/>
+  <path d="M0,0 Q3.93,-2.89 8.73,0 Q3.93,2.89 0,0 Z" transform="translate(25.67,22.81) rotate(-77.81)"/>
+  <path d="M0,0 Q4.09,-3.01 9.10,0 Q4.09,3.01 0,0 Z" transform="translate(30.43,19.43) rotate(-31.00)"/>
+  <path d="M55.29,89.63 L57.59,89.23 L59.87,88.70 L62.10,88.02 L64.30,87.21 L66.43,86.26 L68.51,85.19 L70.52,83.99 L72.44,82.66 L74.29,81.23 L76.04,79.68 L77.69,78.02 L79.24,76.27 L80.67,74.43 L82.00,72.50 L83.20,70.50 L84.27,68.42 L85.21,66.28 L86.03,64.09 L86.70,61.85 L87.24,59.58 L87.63,57.27 L87.89,54.95 L88.00,52.61 L87.96,50.28 L87.78,47.95 L87.46,45.63 L87.00,43.34 L86.40,41.08 L85.66,38.86 L84.78,36.70 L83.78,34.59 L82.64,32.54 L81.38,30.57 L80.01,28.68 L78.52,26.88 L76.92,25.18 L75.22,23.57 L73.42,22.08 L71.54,20.69 L69.57,19.43" fill="none" stroke="currentColor" stroke-width="1.30" stroke-linecap="round"/>
+  <path d="M0,0 Q5.72,-4.21 12.72,0 Q5.72,4.21 0,0 Z" transform="translate(60.99,88.38) rotate(21.19)"/>
+  <path d="M0,0 Q5.72,-4.21 12.72,0 Q5.72,4.21 0,0 Z" transform="translate(60.99,88.38) rotate(-54.81)"/>
+  <path d="M0,0 Q5.47,-4.02 12.15,0 Q5.47,4.02 0,0 Z" transform="translate(71.49,83.34) rotate(3.56)"/>
+  <path d="M0,0 Q5.47,-4.02 12.15,0 Q5.47,4.02 0,0 Z" transform="translate(71.49,83.34) rotate(-72.44)"/>
+  <path d="M0,0 Q5.21,-3.83 11.58,0 Q5.21,3.83 0,0 Z" transform="translate(79.97,75.36) rotate(-14.06)"/>
+  <path d="M0,0 Q5.21,-3.83 11.58,0 Q5.21,3.83 0,0 Z" transform="translate(79.97,75.36) rotate(-90.06)"/>
+  <path d="M0,0 Q4.95,-3.64 11.01,0 Q4.95,3.64 0,0 Z" transform="translate(85.64,65.19) rotate(-31.69)"/>
+  <path d="M0,0 Q4.95,-3.64 11.01,0 Q4.95,3.64 0,0 Z" transform="translate(85.64,65.19) rotate(-107.69)"/>
+  <path d="M0,0 Q4.70,-3.45 10.44,0 Q4.70,3.45 0,0 Z" transform="translate(87.96,53.78) rotate(-49.31)"/>
+  <path d="M0,0 Q4.70,-3.45 10.44,0 Q4.70,3.45 0,0 Z" transform="translate(87.96,53.78) rotate(-125.31)"/>
+  <path d="M0,0 Q4.44,-3.27 9.87,0 Q4.44,3.27 0,0 Z" transform="translate(86.72,42.20) rotate(-66.94)"/>
+  <path d="M0,0 Q4.44,-3.27 9.87,0 Q4.44,3.27 0,0 Z" transform="translate(86.72,42.20) rotate(-142.94)"/>
+  <path d="M0,0 Q4.19,-3.08 9.30,0 Q4.19,3.08 0,0 Z" transform="translate(82.03,31.55) rotate(-84.56)"/>
+  <path d="M0,0 Q4.19,-3.08 9.30,0 Q4.19,3.08 0,0 Z" transform="translate(82.03,31.55) rotate(-160.56)"/>
+  <path d="M0,0 Q3.93,-2.89 8.73,0 Q3.93,2.89 0,0 Z" transform="translate(74.33,22.81) rotate(-102.19)"/>
+  <path d="M0,0 Q3.93,-2.89 8.73,0 Q3.93,2.89 0,0 Z" transform="translate(74.33,22.81) rotate(-178.19)"/>
+  <path d="M0,0 Q4.09,-3.01 9.10,0 Q4.09,3.01 0,0 Z" transform="translate(69.57,19.43) rotate(-149.00)"/>
+  <path d="M48.08,89.70 L44.56,94.66 L46.48,94.02 L47.12,95.94 L50.32,91.14 Z"/>
+  <path d="M51.92,89.70 L55.44,94.66 L53.52,94.02 L52.88,95.94 L49.68,91.14 Z"/>
+  <ellipse cx="50.00" cy="90.50" rx="2.56" ry="1.92"/>
+</g>
+</svg>

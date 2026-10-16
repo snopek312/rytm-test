@@ -4,7 +4,7 @@
 //     swimCsv: {text} | null,                         // the Garmin activities CSV as it was loaded
 //     fit:     {acts:{id:packed}, bad:{id:[i]}, last:[id], hidden:{trainingId: deletedAtISO}},
 //     habits:  {habits:[...], log:{day:{habitId:value}}, notes:{day:text}, skips:{day:reason}},
-//     attendance: {days:[1..7], from:day|null, cancelled:{day:reason}}   // optional, since 16.10.2026 (Frekwencja);
+//     attendance: {days:[1..7], from:day|null, cancelled:{day:reason}, absent:{day:""}}   // optional, since 16.10.2026;
 //   } }                                                                  // older versions ignore it, so it stays format 1
 (function (g) {
   "use strict";
@@ -34,6 +34,7 @@
       notes: Object.keys(h.notes || {}).length,
       skippedDays: Object.keys(h.skips || {}).length,
       cancelledTrainings: Object.keys((data.attendance && data.attendance.cancelled) || {}).length,
+      markedAbsences: Object.keys((data.attendance && data.attendance.absent) || {}).length,
       firstDay: allDays[0] || null,
       lastDay: allDays[allDays.length - 1] || null,
     };
@@ -46,7 +47,7 @@
       fit: { acts: state.fit.acts || {}, bad: state.fit.bad || {}, last: state.fit.last || [], hidden: state.fit.hidden || {} },
       habits: { habits: state.habits.habits || [], log: state.habits.log || {}, notes: state.habits.notes || {}, skips: state.habits.skips || {} },
     };
-    if (state.attendance) data.attendance = { days: state.attendance.days || [], from: state.attendance.from || null, cancelled: state.attendance.cancelled || {} };
+    if (state.attendance) data.attendance = { days: state.attendance.days || [], from: state.attendance.from || null, cancelled: state.attendance.cancelled || {}, absent: state.attendance.absent || {} };
     const json = JSON.stringify(data);
     return {
       app: "rytm", kind: "backup", format: FORMAT,
@@ -125,7 +126,10 @@
     if (a !== undefined && a !== null) {
       if (!isObj(a) || !Array.isArray(a.days) || !a.days.every(x => Number.isInteger(x) && x >= 1 && x <= 7) || !(a.from === null || (typeof a.from === "string" && DAY.test(a.from))) || !isObj(a.cancelled))
         errors.push("Część „frekwencja” ma zły format.");
-      else for (const [k, v] of Object.entries(a.cancelled)) if (!DAY.test(k) || typeof v !== "string") { errors.push("Lista pominiętych treningów ma zły format."); break; }
+      else {
+        for (const [k, v] of Object.entries(a.cancelled)) if (!DAY.test(k) || typeof v !== "string") { errors.push("Lista pominiętych treningów ma zły format."); break; }
+        if (a.absent !== undefined && (!isObj(a.absent) || !Object.entries(a.absent).every(([k, v]) => DAY.test(k) && typeof v === "string"))) errors.push("Lista nieobecności ma zły format.");
+      }
     }
     const uniq = [...new Set(errors)];
     if (uniq.length) return { ok: false, errors: uniq.slice(0, 8), warnings, backup: null, summary: null };
@@ -142,6 +146,7 @@
     lost("habitDays", "Dni z wpisami nawyków");
     lost("notes", "Notatki");
     lost("cancelledTrainings", "Pominięte dni treningowe");
+    lost("markedAbsences", "Nieobecności zaznaczone ręcznie");
     if (current.lastDay && incoming.lastDay && incoming.lastDay < current.lastDay)
       out.push(`Najnowsze dane w kopii są z ${incoming.lastDay}, a na urządzeniu z ${current.lastDay}.`);
     return out;
