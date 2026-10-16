@@ -1,6 +1,6 @@
 // Rytm: school ("Szkoła") — grades in percent, as at 2 LO Elbląg:
 //   1–39 → 1, 40–54 → 2, 55–69 → 3, 70–84 → 4, 85–94 → 5, 95–100 → 6 (the limits can be changed in the settings).
-// Each grade: subject, percent, weight 1–10, kind (sprawdzian, kartkówka, ...), description, date, and optionally:
+// Each grade: subject, percent, weight 1–10, kind (praca klasowa, sprawdzian, kartkówka, ...), description, date, and optionally:
 // a mark for the analysis ("ok" or "zle" — I do not like it), a planned retake percent (only for "what if") and a
 // real retake percent (counted by the school rule: replaces the grade, both count, or the better one counts).
 // The average of a subject is the weighted average of the percents; the predicted final grade comes from the same
@@ -15,8 +15,10 @@
   const SUBJECTS = ["Biologia", "Biznes i zarządzanie", "Chemia", "Edukacja obywatelska", "Edukacja zdrowotna", "Fizyka", "Geografia",
     "Historia", "Informatyka", "Język angielski", "Język hiszpański", "Język polski", "Matematyka", "Wychowanie fizyczne"];
   const EXTENDED = ["Matematyka", "Fizyka", "Informatyka"];
-  const CATS = [{ id: "spr", name: "Sprawdzian", w: 5 }, { id: "kart", name: "Kartkówka", w: 3 }, { id: "odp", name: "Odpowiedź", w: 2 },
-    { id: "proj", name: "Projekt", w: 3 }, { id: "dom", name: "Praca domowa", w: 1 }, { id: "akt", name: "Aktywność", w: 1 }, { id: "inne", name: "Inne", w: 1 }];
+  // the kinds as in the school's e-register (praca klasowa 8 is the heaviest); "inne" must stay last (the fallback)
+  const CATS = [{ id: "pk", name: "Praca klasowa", w: 8 }, { id: "spr", name: "Sprawdzian", w: 5 }, { id: "kart", name: "Kartkówka", w: 3 },
+    { id: "odp", name: "Odpowiedź", w: 2 }, { id: "lek", name: "Praca na lekcji", w: 2 }, { id: "proj", name: "Projekt", w: 3 },
+    { id: "dom", name: "Praca domowa", w: 1 }, { id: "akt", name: "Aktywność", w: 1 }, { id: "inne", name: "Inne", w: 1 }];
   const GRADE_NAMES = ["", "niedostateczny", "dopuszczający", "dostateczny", "dobry", "bardzo dobry", "celujący"];
   const RETAKE = ["replace", "both", "max"];
   const DEFAULT_SETTINGS = { th: [40, 55, 70, 85, 95], retake: "replace", semEnd: "01-31", pasek: 4.75,
@@ -277,7 +279,7 @@
   function subjectView(s, R) {
     const list = subjectGrades(S, s.id, R), st = stats(list, S.settings), T = today();
     const target = s.target || (st.grade ? Math.min(6, st.grade + 1) : 5);
-    const calc = CATS.filter(c => ["spr", "kart", "odp"].includes(c.id)).map(c => {
+    const calc = CATS.filter(c => ["pk", "spr", "kart", "odp"].includes(c.id)).map(c => {
       const w = S.settings.catW[c.id], rq = required(st, target, w, S.settings);
       let txt;
       if (rq.free) txt = `wystarczy dowolny wynik — ${target} już masz`;

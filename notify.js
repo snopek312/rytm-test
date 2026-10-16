@@ -2,7 +2,7 @@
 // Loaded before every other script, so all modules report problems the same way.
 (function (g) {
   "use strict";
-  const VERSION = "2026.10.16-szkola";
+  const VERSION = "2026.10.16-praca-klasowa";
 
   /* ---------------- messages ---------------- */
   // Errors stay on screen until closed; info messages disappear on their own.
