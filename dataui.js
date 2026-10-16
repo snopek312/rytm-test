@@ -9,7 +9,10 @@
 (function (g) {
   "use strict";
   const Store = g.RytmStore, Migrate = g.RytmMigrate, A = g.RytmAdapters, Bridge = g.RytmBridge, Backup = g.Backup;
-  const DEFAULTS = { dbName: "rytm", keys: { journal: "rytmDziennik", marker: "rytmBaza" }, test: false, label: null, filePrefix: "rytm", storeOptions: {}, wrapAdapter: null, lockTimeoutMs: 1500 };
+  // legacy: false — this installation never looks at the stage-1 keys (no migration screen, no old data in the
+  // read-only views); they stay where they are, untouched. Used by the GitHub web app: that address never had stage-1
+  // data, and the test version on the same address writes synthetic stage-1 data there. Data comes in from a backup.
+  const DEFAULTS = { dbName: "rytm", keys: { journal: "rytmDziennik", marker: "rytmBaza" }, test: false, label: null, filePrefix: "rytm", storeOptions: {}, wrapAdapter: null, lockTimeoutMs: 1500, legacy: true };
   const user = g.RytmConfig || {};
   const cfg = Object.assign({}, DEFAULTS, user, { keys: Object.assign({}, DEFAULTS.keys, user.keys || {}) });
   const say = g.Rytm.notify;
@@ -96,7 +99,8 @@
   }
   function roError() { const e = new Error("Podgląd: zapis jest wyłączony."); e.name = "ReadOnlyError"; return e; }
   function readOnlyIdb() { return Object.assign({}, idbAdapter(), { readOnly: true, kind: "idb-podglad", commit: () => Promise.reject(roError()), destroy: () => Promise.reject(roError()) }); }
-  const legacyAdapter = () => A.createLegacyAdapter({ kv: ctx.kv || emptyKv });
+  const oldKv = () => (cfg.legacy === false ? null : ctx.kv);          // where the stage-1 keys are read from (never written)
+  const legacyAdapter = () => A.createLegacyAdapter({ kv: oldKv() || emptyKv });
   const storeOptions = extra => Object.assign({ kv: ctx.kv, keys: cfg.keys }, cfg.storeOptions, extra);
 
   function acquireLock() {
@@ -128,7 +132,7 @@
   }
   async function decide(store) {
     if (store.mode === Store.MODE.NORMAL) {
-      const need = ctx.kv ? Migrate.needed(store, ctx.kv) : { needed: false };
+      const need = oldKv() ? Migrate.needed(store, oldKv()) : { needed: false };
       if (need.needed) { ctx.pending = store; return openView("przed-migracja", legacyAdapter()); }
       return useStore(store);
     }
@@ -280,8 +284,8 @@
       html += `<p class="meta">Dane przeniesione ze starego zapisu ${esc(when(mig.verifiedAt) || "")} i sprawdzone. Stary zapis został na urządzeniu bez zmian; aplikacja już go nie używa.</p>`;
     if (ctx.reason === "baza-zniknela") {
       const extra = [`<button class="btn" type="button" data-dact="rescue">Zapisz dane ratunkowe</button>`];
-      if (ctx.kv && Migrate.hasLegacy(ctx.kv)) extra.push(`<button class="btn" type="button" data-dact="remigrate">Przenieś ponownie stary zapis</button>`);
-      html += `<div class="d-warn"><p>Możesz wczytać kopię poniżej. Dane ratunkowe to zmiany, które czekały w dzienniku, gdy baza zniknęła.${ctx.kv && Migrate.hasLegacy(ctx.kv) ? " Stary zapis (sprzed przeniesienia) też jest na urządzeniu, ale zawiera dane z dnia przeniesienia, bez późniejszych zmian." : ""}</p><div class="actions">${extra.join("")}</div></div>`;
+      if (oldKv() && Migrate.hasLegacy(oldKv())) extra.push(`<button class="btn" type="button" data-dact="remigrate">Przenieś ponownie stary zapis</button>`);
+      html += `<div class="d-warn"><p>Możesz wczytać kopię poniżej. Dane ratunkowe to zmiany, które czekały w dzienniku, gdy baza zniknęła.${oldKv() && Migrate.hasLegacy(oldKv()) ? " Stary zapis (sprzed przeniesienia) też jest na urządzeniu, ale zawiera dane z dnia przeniesienia, bez późniejszych zmian." : ""}</p><div class="actions">${extra.join("")}</div></div>`;
     }
     html += `<p class="note">Zapis na tym urządzeniu nie chroni przed usunięciem danych witryny ani zgubieniem telefonu. Chroni tylko kopia w pliku.</p>`;
     el.innerHTML = html;
@@ -327,7 +331,7 @@
 
   /* ---------- the migration screen ---------- */
   function legacyData() {
-    const L = Migrate.readLegacy(ctx.kv || emptyKv), P = L.parts, v = p => (p.present && p.ok ? p.value : null);
+    const L = Migrate.readLegacy(oldKv() || emptyKv), P = L.parts, v = p => (p.present && p.ok ? p.value : null);
     return { L, csv: v(P.csv), fit: v(P.fit), habits: v(P.habits) };
   }
   function expectedSummary(d) {
@@ -440,7 +444,7 @@
       }
     }
     let rep;
-    try { rep = await Migrate.run({ store, kv: ctx.kv, version: g.Rytm.VERSION }); }
+    try { rep = await Migrate.run({ store, kv: oldKv() || emptyKv, version: g.Rytm.VERSION }); }
     catch (e) { rep = { ok: false, error: msg(e), parts: [] }; }
     ctx.report = rep;
     if (rep.ok) {

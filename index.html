@@ -2,16 +2,16 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
-<meta name="theme-color" content="#b3402e">
+<meta name="theme-color" content="#0a7f95">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Rytm test">
-<title>Rytm – wersja testowa</title>
+<meta name="apple-mobile-web-app-title" content="Rytm">
+<title>Rytm</title>
 <link rel="stylesheet" href="fonts.css">
 <style>
 /* Layout: one column of lane-like panels; tabs for overview and records; records as a distance × stroke board */
@@ -636,8 +636,7 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
 </nav>
 
 <script src="notify.js"></script>
-<script>window.RytmConfig={"test": true, "label": "WERSJA TESTOWA", "dbName": "rytm-test", "keys": {"journal": "rytmTestDziennik", "marker": "rytmTestBaza"}, "filePrefix": "rytm-TEST"}</script>
-<script src="testpanel.js"></script>
+<script>window.RytmConfig=Object.assign(window.RytmConfig||{},{"legacy": false})</script>
 <script src="vendor/chart.umd.js"></script>
 <script src="fit-vendor.js"></script>
 <script src="swim.js"></script>
@@ -651,7 +650,7 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
 <script src="habits.js"></script>
 <script src="trainings.js"></script>
 <script>
-const SAMPLE_CSV = "Typ aktywności,Data,Ulubiony,Tytuł,Dystans,Suma kalorii,Czas,Średnie tętno,Maksymalne tętno,Aerobowy TE,Średnie tempo,Średni Swolf,Czas ruchu\nPływanie w basenie,2026-08-03 07:00:00,false,Syntetyczny basen 1,1000,280,00:28:00,138,168,2.5,2:28,35,00:26:00\nPływanie w basenie,2026-08-07 07:00:00,false,Syntetyczny basen 2,1250,289,00:31:00,139,169,2.6,2:29,36,00:29:00\nPływanie w basenie,2026-08-09 07:00:00,false,Syntetyczny basen 3,1500,298,00:34:00,140,170,2.7,2:30,37,00:32:00\nPływanie w basenie,2026-08-13 07:00:00,false,Syntetyczny basen 4,1750,307,00:37:00,141,171,2.8,2:31,38,00:35:00\nPływanie w basenie,2026-08-15 07:00:00,false,Syntetyczny basen 5,2000,316,00:40:00,142,172,2.9,2:32,39,00:38:00\nPływanie w basenie,2026-08-19 07:00:00,false,Syntetyczny basen 6,1000,325,00:43:00,143,173,3.0,2:33,40,00:41:00\nPływanie w basenie,2026-08-21 07:00:00,false,Syntetyczny basen 7,1250,334,00:28:00,144,174,2.5,2:34,35,00:26:00\nPływanie w basenie,2026-08-25 07:00:00,false,Syntetyczny basen 8,1500,343,00:31:00,138,175,2.6,2:35,36,00:29:00\nPływanie w basenie,2026-08-27 07:00:00,false,Syntetyczny basen 9,1750,352,00:34:00,139,176,2.7,2:36,37,00:32:00\nPływanie w basenie,2026-08-31 07:00:00,false,Syntetyczny basen 10,2000,361,00:37:00,140,177,2.8,2:37,38,00:35:00\nPływanie w basenie,2026-09-02 07:00:00,false,Syntetyczny basen 11,1000,370,00:40:00,141,178,2.9,2:38,39,00:38:00\nPływanie w basenie,2026-09-06 07:00:00,false,Syntetyczny basen 12,1250,379,00:43:00,142,168,3.0,2:39,40,00:41:00\nPływanie w basenie,2026-09-08 07:00:00,false,Syntetyczny basen 13,1500,388,00:28:00,143,169,2.5,2:40,35,00:26:00\nPływanie w basenie,2026-09-12 07:00:00,false,Syntetyczny basen 14,1750,397,00:31:00,144,170,2.6,2:41,36,00:29:00\nPływanie w basenie,2026-09-14 07:00:00,false,Syntetyczny basen 15,2000,406,00:34:00,138,171,2.7,2:42,37,00:32:00\nPływanie w basenie,2026-09-18 07:00:00,false,Syntetyczny basen 16,1000,415,00:37:00,139,172,2.8,2:43,38,00:35:00\nPływanie w basenie,2026-09-29 07:00:00,false,Syntetyczny trening 2000 m,2000,292,00:41:00,150,188,3.4,2:03,37,00:38:30\nSiatkówka,2026-08-12 18:00:00,false,Syntetyczna siatkówka 1,--,410,01:30:00,126,169,2.3,--,--,01:24:00\nSiatkówka,2026-09-16 18:00:00,false,Syntetyczna siatkówka 2,--,395,01:20:00,124,166,2.1,--,--,01:15:00\nBieganie,2026-08-23 17:30:00,false,Syntetyczny bieg,4.20,310,00:27:00,151,178,3.0,--,--,00:26:30\n";
+const SAMPLE_CSV = /*SAMPLE_CSV*/null;
 // stage 2B: all data is in the data store (store.js, through bridge.js); the stage-1 keys are only read by the migration
 const $ = id => document.getElementById(id);
 
@@ -1199,7 +1198,9 @@ function renderData(){
   $("dWhere").innerHTML = [
     RytmData.mode === "normal" ? "Nawyki, notatki i treningi: w bazie danych na tym urządzeniu (IndexedDB)." : "Zapis jest wyłączony: pokazuję dane bez możliwości zmian.",
     inClaude ? "Nawyki i notatki: także na twoim koncie w Claude." : "",
-    "Stary zapis (sprzed przeniesienia danych) zostaje na urządzeniu bez zmian. Aplikacja go nie usuwa.",
+    RytmData.cfg.legacy === false
+      ? "Dane z poprzedniej wersji (w Claude) przenosisz plikiem kopii: zapisz kopię tam, a tutaj użyj „Wczytaj kopię”."
+      : "Stary zapis (sprzed przeniesienia danych) zostaje na urządzeniu bez zmian. Aplikacja go nie usuwa.",
   ].filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("") + `<li id="dUsage">Zajęte miejsce: sprawdzam…</li>`;
   try{ navigator.storage.estimate().then(e=>{ const el = $("dUsage"); if(el) el.textContent = `Zajęte miejsce przez tę stronę: ${fmtMB(e.usage || 0)} (wg przeglądarki).`; }, ()=>{ const el = $("dUsage"); if(el) el.remove(); }); }
   catch(e){ const el = $("dUsage"); if(el) el.remove(); }
@@ -1271,4 +1272,3 @@ window.RytmApp.ready = (async ()=>{
 </script>
 </body>
 </html>
-<!-- Test aktualizacji Rytm -->

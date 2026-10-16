@@ -2,7 +2,7 @@
 // Loaded before every other script, so all modules report problems the same way.
 (function (g) {
   "use strict";
-  const VERSION = "2026.10.11-etap2b";
+  const VERSION = "2026.10.16-etap2c";
 
   /* ---------------- messages ---------------- */
   // Errors stay on screen until closed; info messages disappear on their own.
