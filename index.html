@@ -277,8 +277,60 @@ i.off{background:transparent!important;box-shadow:none}
 .h-stats .v.small-v{font-size:1.3rem;padding-block:4px 2px}
 .h-pills.many .h-pill{min-width:36px;height:40px}
 /* trainings */
-.swimtabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.swimtabs .tab{padding:8px 6px}
+.swimtabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.swimtabs .tab{padding:8px 4px;font-size:1.05rem}
+/* attendance (Frekwencja) */
+#frRoot{display:flex;flex-direction:column;gap:18px}
+.fr-big{display:flex;align-items:center;gap:14px}
+.fr-pct{font-family:var(--f-display);font-weight:700;font-size:3.2rem;line-height:1;font-variant-numeric:tabular-nums;color:var(--accent)}
+.fr-of{color:var(--muted);font-size:.9rem;line-height:1.35}
+.fr-of strong{color:var(--fg);font-family:var(--f-display);font-size:1.2rem;font-weight:600}
+.fr-tiles .tile{background:var(--bg)}
+.fr-tiles .tile .v{font-size:1.6rem}
+.fr-nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px}
+.fr-nav h2{text-align:center}
+.fr-arrow{width:40px;height:36px;font-size:1.3rem}
+.fr-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.fr-dow{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;padding-bottom:2px}
+.fr-cell{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:48px;padding:4px 2px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;font:inherit;min-width:0}
+.fr-cell b{font-family:var(--f-display);font-size:1.1rem;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.fr-cell small{font-size:.6rem;line-height:1.1;min-height:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%}
+.fr-cell.out{opacity:.4}
+.fr-cell.s-obecny{background:var(--good-soft);border-color:var(--good)}
+.fr-cell.s-obecny small{color:var(--good);font-weight:600}
+.fr-cell.s-obecny.extra{border-style:dashed}
+.fr-cell.s-nieobecny{background:var(--bad-soft);border-color:var(--bad)}
+.fr-cell.s-nieobecny small{color:var(--bad);font-weight:600}
+.fr-cell.s-odwolany{background:repeating-linear-gradient(135deg,var(--surface) 0 5px,var(--ring-track) 5px 9px);border-color:var(--muted);border-style:dashed}
+.fr-cell.s-nieznany{border-style:dashed;border-color:var(--muted)}
+.fr-cell.s-wolne,.fr-cell.s-przed{background:transparent;border-color:transparent;color:var(--muted)}
+.fr-cell.s-przed.had::after{content:"";position:absolute;bottom:6px;width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.fr-cell.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.fr-cell.today b{color:var(--accent)}
+.fr-cell.sel{outline:2.5px solid var(--fg);outline-offset:1px}
+.fr-cell:focus-visible{outline:2.5px solid var(--accent);outline-offset:1px}
+.fr-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.75rem;color:var(--muted)}
+.fr-legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:5px;vertical-align:-2px;border:1.5px solid var(--line);background:var(--surface)}
+.fr-legend i.s-obecny{background:var(--good-soft);border-color:var(--good)}
+.fr-legend i.s-nieobecny{background:var(--bad-soft);border-color:var(--bad)}
+.fr-legend i.s-odwolany{background:repeating-linear-gradient(135deg,var(--surface) 0 3px,var(--ring-track) 3px 5px);border:1.5px dashed var(--muted)}
+.fr-legend i.s-nieznany{border:1.5px dashed var(--muted)}
+.fr-legend i.s-wolne{background:transparent;border-color:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.fr-ok{color:var(--good)}
+.fr-bad{color:var(--bad)}
+.fr-trs{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.fr-skip{display:flex;flex-direction:column;gap:8px}
+.fr-skip .actions{align-items:center}
+.fr-set summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between}
+.fr-set summary::-webkit-details-marker{display:none}
+.fr-set summary::after{content:"";width:9px;height:9px;margin-right:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+.fr-set[open] summary::after{transform:rotate(45deg)}
+.fr-field{display:flex;flex-direction:column;gap:6px}
+.fr-field .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.fr-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;max-width:420px}
+.fr-days .chip{min-width:0;padding:7px 0;text-align:center}
+.fr-from{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.fr-from input{font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:6px 10px}
 #p-tr{gap:0}
 .tr-list{display:flex;flex-direction:column;gap:10px}
 .tr-row{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%;cursor:pointer;color:inherit;
@@ -480,6 +532,7 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
     <button class="tab" role="tab" id="tab-ov" aria-controls="p-ov" aria-selected="true">Przegląd</button>
     <button class="tab" role="tab" id="tab-tr" aria-controls="p-tr" aria-selected="false">Treningi</button>
     <button class="tab" role="tab" id="tab-rec" aria-controls="p-rec" aria-selected="false">Rekordy</button>
+    <button class="tab" role="tab" id="tab-fr" aria-controls="p-fr" aria-selected="false">Frekwencja</button>
   </nav>
   <div class="rope" aria-hidden="true"></div>
   <p class="msg" id="msg" hidden></p>
@@ -534,6 +587,11 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
   <!-- ================= TRAININGS ================= -->
   <section class="tabpanel" id="p-tr" role="tabpanel" aria-labelledby="tab-tr" hidden>
     <div id="trRoot" class="tabpanel"></div>
+  </section>
+
+  <!-- ================= ATTENDANCE ================= -->
+  <section class="tabpanel" id="p-fr" role="tabpanel" aria-labelledby="tab-fr" hidden>
+    <div id="frRoot"></div>
   </section>
 
   <!-- ================= RECORDS ================= -->
@@ -649,6 +707,7 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
 <script src="dataui.js"></script>
 <script src="habits.js"></script>
 <script src="trainings.js"></script>
+<script src="attendance.js"></script>
 <script>
 const SAMPLE_CSV = /*SAMPLE_CSV*/null;
 // stage 2B: all data is in the data store (store.js, through bridge.js); the stage-1 keys are only read by the migration
@@ -664,16 +723,18 @@ function showView(v){
   else { setHash("#nawyki"); Habits.render(); }
   try{ window.scrollTo({top:0}); }catch(e){}
 }
-const TAB_HASH = { ov: "#przeglad", tr: "#treningi", rec: "#rekordy" };
+const TAB_HASH = { ov: "#przeglad", tr: "#treningi", rec: "#rekordy", fr: "#frekwencja" };
+const Attendance = window.RytmAttendance;
 function showTab(which){
   swimTab = which;
-  for(const t of ["ov","tr","rec"]){ $("tab-"+t).setAttribute("aria-selected", t === which); $("p-"+t).hidden = t !== which; }
+  for(const t of ["ov","tr","rec","fr"]){ $("tab-"+t).setAttribute("aria-selected", t === which); $("p-"+t).hidden = t !== which; }
   setHash(TAB_HASH[which]);
   if(which === "ov") render();
   if(which === "tr") Trainings.render();
+  if(which === "fr") Attendance.render();
 }
 document.querySelectorAll(".bb").forEach(b => b.addEventListener("click", () => showView(b.dataset.view)));
-for(const t of ["ov","tr","rec"]) $("tab-"+t).addEventListener("click", () => showTab(t));
+for(const t of ["ov","tr","rec","fr"]) $("tab-"+t).addEventListener("click", () => showTab(t));
 
 /* ---------------- CSV ---------------- */
 function parseCSV(text){
@@ -728,6 +789,7 @@ function load(text,save){
 function refreshTrainings(){
   const fit = {}; for(const [id,p] of Object.entries(store.acts)) fit[id] = Swim.unpack(p);
   Trainings.setData(all, fit, store.hidden);
+  Attendance.setTrainings(Trainings.list());
   const has = Trainings.list().some(t=>t.swim);
   $("empty").hidden = has; $("dash").hidden = !has;
   if(!$("v-swim").hidden && swimTab === "ov") render();
@@ -1052,7 +1114,7 @@ if(window.claude && typeof window.claude.use === "function") window.claude.use("
 
 // what is on the screen now, including changes that may still be waiting for the database
 function currentState(){
-  return { csvText, fit:{ acts:store.acts, bad:store.bad, last:store.last, hidden:store.hidden }, habits: Habits.exportState() };
+  return { csvText, fit:{ acts:store.acts, bad:store.bad, last:store.last, hidden:store.hidden }, habits: Habits.exportState(), attendance: Attendance.exportState() };
 }
 function currentSummary(){ return Backup.build(currentState(), { csvRows: all.length }).summary; }
 
@@ -1110,7 +1172,7 @@ function showPreviewError(errors){
 function renderPreview(){
   const box = $("impPreview"), p = pending;
   if(!p){ box.hidden = true; box.innerHTML = ""; return; }
-  const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni","skippedDays"]];
+  const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni (nawyki)","skippedDays"],["Pominięte dni treningowe","cancelledTrainings"]];
   const when = new Date(p.backup.exportedAt);
   const hasData = Object.values(p.cur).some(v=>typeof v === "number" && v > 0);
   box.hidden = false;
@@ -1238,11 +1300,17 @@ function habitsPersist(){
   return { load: ()=>B.loadHabits(), save: S=>B.saveHabits(S), loadTimer: ()=>B.loadTimer(), saveTimer: t=>B.saveTimer(t),
     readOnly: RytmData.mode !== "normal", statusText: ()=>RytmData.statusText(), whenSaved: RytmData.whenSaved };
 }
+function attendancePersist(){
+  const B = RytmData.bridge;
+  return { load: ()=>B.loadAttendance(), save: a=>B.saveAttendance(a), whenSaved: RytmData.whenSaved, writable: ()=>RytmData.mode === "normal",
+    openTraining: id=>openTraining(id) };
+}
 // (re)loads everything on the screen from the data store: at start, after the migration, an import or a recovery
 function useData(){
   demo = null; selected = null; confirmBad = false; recPool = null; $("recBanner").hidden = true;
   pending = null; renderPreview();
   loadStore();
+  Attendance.attach(attendancePersist());
   const csv = RytmData.bridge.loadCsv();
   all = []; csvText = null;
   if(csv || SAMPLE_CSV) load(csv || SAMPLE_CSV, false); else refreshTrainings();
@@ -1252,6 +1320,7 @@ function useData(){
   if(!$("v-swim").hidden) showTab(swimTab);
 }
 Trainings.mount({ onDelete: deleteTraining });
+Attendance.mount();
 window.RytmApp = { useData, exportBackup };
 window.RytmApp.ready = (async ()=>{
   RytmData.init();
@@ -1265,7 +1334,7 @@ window.RytmApp.ready = (async ()=>{
   if(!RytmData.bridge){ $("bootMsg").textContent = "Nie udało się wczytać danych."; return; }
   useData();
   Habits.mount();
-  const startTab = { "#rekordy": "rec", "#przeglad": "ov", "#treningi": "tr" }[location.hash];
+  const startTab = { "#rekordy": "rec", "#przeglad": "ov", "#treningi": "tr", "#frekwencja": "fr" }[location.hash];
   if(RytmData.reason === "przed-migracja"){ showView("habits"); RytmData.showMigration(); }
   else if(startTab){ swimTab = startTab; showView("swim"); } else if(location.hash === "#dane") showView("data"); else showView("habits");
 })();

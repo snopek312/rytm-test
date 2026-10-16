@@ -104,6 +104,12 @@
     const dropUndo = () => commit(diff("snapshots", new Map(), metaOnly("przedImportem")));
     const lastBackup = () => store.status().ostatniaKopia;
 
+    /* ---------- attendance (Frekwencja): training days, start day, skipped days — one record in meta ---------- */
+    const attRecord = a => ({ days: (a.days || []).slice(), from: a.from || null, cancelled: Object.assign({}, a.cancelled || {}) });
+    // null = never saved (the app then uses Monday to Saturday from the first swim)
+    function loadAttendance() { const r = store.get("meta", "attendance"); return r ? copy(attRecord(r)) : null; }
+    const saveAttendance = a => commit(diff("meta", a ? new Map([["attendance", attRecord(a)]]) : new Map(), metaOnly("attendance")));
+
     // a validated backup (format 1) -> records for store.replaceAll(); the same conversion as the migration.
     // backup: what to record as "the last backup" — {lastAt, changesSince}. A file the user has: its date and 0 changes.
     // The internal undo copy is not such a file, so undo keeps the previous date and an unknown number of changes.
@@ -120,6 +126,8 @@
       const { records } = Migrate.fromLegacy(legacy);
       const b = backup || (exportedAt ? { lastAt: exportedAt, changesSince: 0 } : null);
       if (b) records.meta.push({ id: "backup", lastAt: b.lastAt || null, changesSince: typeof b.changesSince === "number" ? b.changesSince : null });
+      // attendance: an optional part (backups from stage 1 and 2B do not have it)
+      if (data.attendance) records.meta.push(Object.assign({ id: "attendance" }, copy(attRecord(data.attendance))));
       // the note that the old data was already moved stays: otherwise, after loading a backup with no data,
       // the next start would offer moving the old data again
       const mig = store.get("meta", "migration");
@@ -127,7 +135,7 @@
       return records;
     }
 
-    return { loadFit, saveFit, fitOps, loadHabits, saveHabits, habitOps, loadCsv, saveCsv, loadTimer, saveTimer, loadUndo, dropUndo, lastBackup, recordsFromBackup };
+    return { loadFit, saveFit, fitOps, loadHabits, saveHabits, habitOps, loadCsv, saveCsv, loadTimer, saveTimer, loadUndo, dropUndo, lastBackup, recordsFromBackup, loadAttendance, saveAttendance };
   }
 
   const api = { create };

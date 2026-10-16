@@ -3,7 +3,9 @@
 // { app:"rytm", kind:"backup", format:1, exportedAt, appVersion, summary, checksum, data:{
 //     swimCsv: {text} | null,                         // the Garmin activities CSV as it was loaded
 //     fit:     {acts:{id:packed}, bad:{id:[i]}, last:[id], hidden:{trainingId: deletedAtISO}},
-//     habits:  {habits:[...], log:{day:{habitId:value}}, notes:{day:text}, skips:{day:reason}} } }
+//     habits:  {habits:[...], log:{day:{habitId:value}}, notes:{day:text}, skips:{day:reason}},
+//     attendance: {days:[1..7], from:day|null, cancelled:{day:reason}}   // optional, since 16.10.2026 (Frekwencja);
+//   } }                                                                  // older versions ignore it, so it stays format 1
 (function (g) {
   "use strict";
   const FORMAT = 1;
@@ -31,18 +33,20 @@
       habitDays: days.length,
       notes: Object.keys(h.notes || {}).length,
       skippedDays: Object.keys(h.skips || {}).length,
+      cancelledTrainings: Object.keys((data.attendance && data.attendance.cancelled) || {}).length,
       firstDay: allDays[0] || null,
       lastDay: allDays[allDays.length - 1] || null,
     };
   }
 
-  // state: {csvText, fit:{acts,bad,last,hidden}, habits:{habits,log,notes,skips}}
+  // state: {csvText, fit:{acts,bad,last,hidden}, habits:{habits,log,notes,skips}, attendance?:{days,from,cancelled}}
   function build(state, meta = {}) {
     const data = {
       swimCsv: state.csvText ? { text: state.csvText } : null,
       fit: { acts: state.fit.acts || {}, bad: state.fit.bad || {}, last: state.fit.last || [], hidden: state.fit.hidden || {} },
       habits: { habits: state.habits.habits || [], log: state.habits.log || {}, notes: state.habits.notes || {}, skips: state.habits.skips || {} },
     };
+    if (state.attendance) data.attendance = { days: state.attendance.days || [], from: state.attendance.from || null, cancelled: state.attendance.cancelled || {} };
     const json = JSON.stringify(data);
     return {
       app: "rytm", kind: "backup", format: FORMAT,
@@ -116,6 +120,13 @@
       if (unknown) warnings.push(`${unknown} wpisów dotyczy nawyków, których nie ma w kopii. Zostaną zachowane, ale nie będą widoczne.`);
       for (const k of [...Object.keys(h.notes), ...Object.keys(h.skips)]) if (!DAY.test(k)) { errors.push(`Notatka albo pominięty dzień „${k}” ma zły format daty.`); break; }
     }
+    // attendance (optional)
+    const a = d.attendance;
+    if (a !== undefined && a !== null) {
+      if (!isObj(a) || !Array.isArray(a.days) || !a.days.every(x => Number.isInteger(x) && x >= 1 && x <= 7) || !(a.from === null || (typeof a.from === "string" && DAY.test(a.from))) || !isObj(a.cancelled))
+        errors.push("Część „frekwencja” ma zły format.");
+      else for (const [k, v] of Object.entries(a.cancelled)) if (!DAY.test(k) || typeof v !== "string") { errors.push("Lista pominiętych treningów ma zły format."); break; }
+    }
     const uniq = [...new Set(errors)];
     if (uniq.length) return { ok: false, errors: uniq.slice(0, 8), warnings, backup: null, summary: null };
     return { ok: true, errors: [], warnings, backup: obj, summary: summarize(d, csvRows) };
@@ -130,6 +141,7 @@
     lost("habits", "Nawyki");
     lost("habitDays", "Dni z wpisami nawyków");
     lost("notes", "Notatki");
+    lost("cancelledTrainings", "Pominięte dni treningowe");
     if (current.lastDay && incoming.lastDay && incoming.lastDay < current.lastDay)
       out.push(`Najnowsze dane w kopii są z ${incoming.lastDay}, a na urządzeniu z ${current.lastDay}.`);
     return out;
