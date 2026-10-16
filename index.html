@@ -290,6 +290,149 @@ i.off{background:transparent!important;box-shadow:none}
 .r-chor{--k:var(--k-chor);--ks:var(--k-chor-soft)}
 .r-wyj{--k:var(--k-wyj);--ks:var(--k-wyj-soft)}
 .r-zaw{--k:var(--gold-text)}
+/* school (Szkoła): grades 2..5 one hue from light to dark, 1 = failing (red), 6 = shining gold; the digit is always shown */
+:root{--g1-bg:#b3402e;--g1-fg:#ffffff;--g2-bg:#d6eef2;--g2-fg:#0f2a33;--g3-bg:#a8dbe5;--g3-fg:#0f2a33;--g4-bg:#4fb3c6;--g4-fg:#06262d;--g5-bg:#0a7f95;--g5-fg:#ffffff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--g1-bg:#ef8a76;--g1-fg:#081a20;--g2-bg:#16404a;--g2-fg:#e3f1f4;--g3-bg:#1f5d6b;--g3-fg:#e3f1f4;--g4-bg:#2b8597;--g4-fg:#ffffff;--g5-bg:#3cc3d9;--g5-fg:#081a20}}
+:root[data-theme="dark"]{--g1-bg:#ef8a76;--g1-fg:#081a20;--g2-bg:#16404a;--g2-fg:#e3f1f4;--g3-bg:#1f5d6b;--g3-fg:#e3f1f4;--g4-bg:#2b8597;--g4-fg:#ffffff;--g5-bg:#3cc3d9;--g5-fg:#081a20}
+:is(.sc-chip,.sc-gbig,.sc-dot,.sc-fill).g-0{background:var(--ring-track);color:var(--muted)}
+:is(.sc-chip,.sc-gbig,.sc-dot,.sc-fill).g-1{background:var(--g1-bg);color:var(--g1-fg)}
+:is(.sc-chip,.sc-gbig,.sc-dot,.sc-fill).g-2{background:var(--g2-bg);color:var(--g2-fg)}
+:is(.sc-chip,.sc-gbig,.sc-dot,.sc-fill).g-3{background:var(--g3-bg);color:var(--g3-fg)}
+:is(.sc-chip,.sc-gbig,.sc-dot,.sc-fill).g-4{background:var(--g4-bg);color:var(--g4-fg)}
+:is(.sc-chip,.sc-gbig,.sc-dot,.sc-fill).g-5{background:var(--g5-bg);color:var(--g5-fg)}
+:is(.sc-chip,.sc-gbig,.sc-dot,.sc-fill).g-6{background:linear-gradient(150deg,var(--gold-a) 0%,var(--gold-b) 38%,var(--gold-c) 70%,var(--gold-d) 100%);color:var(--gold-ink)}
+.sc-chip.g-6,.sc-gbig.g-6{overflow:hidden;border-color:var(--gold-edge)}
+.sc-gbig.g-6::after,.sc-chip.g-6::before{content:"";position:absolute;top:-40%;left:-70%;width:40%;height:180%;pointer-events:none;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.85),rgba(255,255,255,0));transform:skewX(-20deg);animation:fr-shine 3.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.sc-gbig.g-6::after,.sc-chip.g-6::before{animation:none;opacity:0}}
+.g-1-t{color:var(--bad)}
+#scRoot{display:flex;flex-direction:column;gap:14px}
+.sctabs .tab{font-size:1rem;padding:8px 2px}
+.sc-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
+.sc-year{display:inline-flex;align-items:center;gap:8px}
+.sc-year strong{font-family:var(--f-display);font-size:1.15rem;font-weight:600}
+.sc-terms{grid-template-columns:repeat(3,auto)}
+.sc-big{display:flex;align-items:center;gap:14px}
+.sc-avg{font-family:var(--f-display);font-weight:700;font-size:3.2rem;line-height:1;font-variant-numeric:tabular-nums;color:var(--accent)}
+.sc-of{color:var(--muted);font-size:.88rem;line-height:1.4}
+.sc-of strong{color:var(--fg);font-family:var(--f-display);font-size:1.2rem;font-weight:600}
+.sc-pasek{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--fg)}
+.sc-pasek::before{content:"";width:16px;height:10px;border-radius:2px;background:linear-gradient(180deg,#fff 0 50%,#d4213d 50% 100%);box-shadow:0 0 0 1px var(--line)}
+.sc-pasek:not(.ok)::before{opacity:.45}
+.sc-tiles .tile{background:var(--bg)}
+.sc-tiles .tile .v{font-size:1.6rem}
+.sc-tiles .tile .v.sc-small{font-size:1.1rem;line-height:1.2;overflow-wrap:anywhere}
+.sc-list{display:flex;flex-direction:column;gap:10px}
+.sc-sub{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.sc-sub.empty{padding:8px 12px;gap:2px}
+.sc-sub.empty .sc-name{font-size:1.05rem;color:var(--muted)}
+.sc-subhead{display:flex;align-items:center;gap:10px}
+.sc-subhead h2,.sc-subhead h3{flex:1;min-width:0}
+.sc-name{flex:1;min-width:0;text-align:left;border:0;background:none;padding:0;color:var(--fg);cursor:pointer;font-family:var(--f-display);font-weight:600;font-size:1.25rem}
+.sc-name>span[aria-hidden]{color:var(--muted)}
+.sc-r{display:inline-block;font-family:var(--f-body);font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:5px;border:1px solid var(--accent);color:var(--accent);vertical-align:3px}
+.sc-gbig{position:relative;flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:10px;font-family:var(--f-display);font-weight:700;font-size:1.5rem;border:1.5px solid transparent}
+.sc-plus{width:34px;height:34px;font-size:1.2rem;flex:none}
+.sc-meter{position:relative;height:8px;border-radius:4px;background:var(--ring-track);margin:2px 0 12px}
+.sc-fill{height:100%;border-radius:4px}
+.sc-meter i{position:absolute;top:-3px;width:1.5px;height:14px;background:var(--muted);opacity:.6}
+.sc-meter i span{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-style:normal;font-size:.6rem;color:var(--muted)}
+.sc-line{margin:0;font-size:.85rem;color:var(--muted)}
+.sc-line b{color:var(--fg)}
+.sc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sc-chip{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:46px;height:48px;padding:0;border-radius:9px;border:1.5px solid transparent;cursor:pointer;font:inherit}
+.sc-chip b{font-family:var(--f-display);font-size:1.3rem;line-height:1}
+.sc-chip b,.sc-chip small{position:relative}
+.sc-chip small{font-size:.6rem;opacity:.9;font-variant-numeric:tabular-nums}
+.sc-chip .sc-w{position:absolute;top:2px;right:4px;font-style:normal;font-size:.55rem;font-weight:700;opacity:.7}
+.sc-chip.f-ok::after,.sc-chip.f-zle::after{content:"";position:absolute;left:-4px;top:-4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surface)}
+.sc-chip.f-ok::after{background:var(--good)}
+.sc-chip.f-zle::after{background:var(--bad)}
+.sc-chip.has-retake{box-shadow:inset 0 -3px 0 rgba(255,255,255,.55)}
+.sc-chip.open{outline:2.5px solid var(--fg);outline-offset:1px}
+.sc-chip:focus-visible{outline:2.5px solid var(--accent);outline-offset:1px}
+.sc-tip{display:none;position:absolute;z-index:30;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:max-content;max-width:230px;flex-direction:column;gap:2px;text-align:left;
+  padding:7px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:.75rem;line-height:1.35;font-weight:400;box-shadow:var(--shadow);pointer-events:none}
+.sc-tip b{font-family:var(--f-body);font-size:.75rem}
+.sc-tipd{font-style:italic;opacity:.9}
+@media (hover:hover){.sc-chip:hover .sc-tip,.sc-chip:focus-visible .sc-tip{display:flex}}
+.sc-gdet{display:flex;flex-direction:column;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.sc-gdet p{margin:0}
+.sc-desc{font-style:italic}
+.sc-flag.ok[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--surface)}
+.sc-flag.zle[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+.sc-dot{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 4px;border-radius:7px;font-family:var(--f-display);font-weight:700;font-size:.95rem;flex:none;position:relative;overflow:hidden}
+.sc-targets{display:flex;gap:6px}
+.sc-targets .chip{min-width:44px;text-align:center;font-family:var(--f-display);font-size:1.05rem}
+.sc-calcl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.sc-calcl li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.sc-calcl li span:last-child{text-align:right}
+.sc-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.sc-table th{text-align:left;color:var(--muted);font-weight:600;font-size:.75rem;padding:6px 8px;border-bottom:1px solid var(--line)}
+.sc-table td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.sc-table tr.f-zle td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+.sc-table tr.f-ok td:first-child{box-shadow:inset 3px 0 0 var(--good)}
+.sc-sim{margin:0;padding:8px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
+.sc-sim.up{background:var(--good-soft);border-color:var(--good)}
+.sc-rank,.sc-close{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px;font-size:.9rem}
+.sc-rank li{display:flex;gap:8px;align-items:flex-start}
+.sc-rank{list-style:none;padding-left:0}
+.sc-up{color:var(--good)}
+.seg.sc-anfilter{display:flex;flex-wrap:wrap;align-self:flex-start}
+.seg.sc-anfilter .seg-b{padding:7px 10px;white-space:nowrap}
+.sc-empty{gap:8px}
+.sc-emptyl{display:flex;flex-wrap:wrap;gap:6px 14px}
+.sc-ep{display:inline-flex;align-items:center;gap:6px}
+.sc-ep .sc-plus{width:28px;height:26px;font-size:1rem}
+#scChartSid{font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:6px 10px;max-width:60%}
+.sc-an-sub{gap:6px}
+.sc-an-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px 10px;padding:8px 0;border-top:1px solid var(--line)}
+.sc-an-row.f-zle{background:linear-gradient(90deg,var(--bad-soft),transparent 70%)}
+.sc-an-row.f-ok .sc-an-info{opacity:.75}
+.sc-an-info{font-size:.88rem;min-width:0;overflow-wrap:anywhere}
+.sc-an-btns{display:flex;gap:4px}
+.sc-an-btns .chip{min-width:38px;text-align:center;font-weight:700}
+.sc-plan{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:.85rem}
+.sc-plan input{flex:1;accent-color:var(--accent)}
+.sc-plan output{font-weight:700;min-width:5.5em;text-align:right;font-variant-numeric:tabular-nums}
+.sc-plan-res{grid-column:1/-1;margin:0}
+.sc-tests,.sc-done{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.sc-test{display:grid;grid-template-columns:62px 1fr;gap:6px 10px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.sc-test.soon{border-color:var(--rope);background:var(--gold-soft)}
+.sc-test.past{border-color:var(--accent)}
+.sc-when{display:flex;flex-direction:column;align-items:center;text-align:center}
+.sc-when b{font-family:var(--f-display);font-size:1.1rem}
+.sc-when small{font-size:.7rem;color:var(--muted)}
+.sc-tinfo{font-size:.9rem;min-width:0;overflow-wrap:anywhere}
+.sc-tbtns{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.sc-done li{font-size:.88rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sc-set summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between}
+.sc-set summary::-webkit-details-marker{display:none}
+.sc-set summary::after{content:"";width:9px;height:9px;margin-right:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+.sc-set[open] summary::after{transform:rotate(45deg)}
+.sc-field{display:flex;flex-direction:column;gap:6px}
+.sc-field .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.sc-ths{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.sc-ths label,.sc-cws label{display:flex;flex-direction:column;gap:2px;font-size:.75rem;color:var(--muted)}
+.sc-cws{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px}
+.sc-subs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sc-subs li{display:flex;align-items:center;gap:6px}
+.sc-subs li input{flex:1;min-width:0}
+.sc-subs .chip{padding:5px 9px;font-size:.78rem}
+.sc-addsub{display:flex;gap:8px}
+.sc-addsub input{flex:1;min-width:0}
+:is(.sc-set,.sc-form) :is(input[type="text"],input[type="number"],input[type="date"],select){font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0;max-width:100%}
+.sc-sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sc-backdrop{position:absolute;inset:0;background:rgba(5,20,25,.45)}
+.sc-form{position:relative;width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));gap:12px;box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+body.sc-sheet-open{overflow:hidden}
+.sc-pctrow{display:flex;align-items:center;gap:8px}
+.sc-pctrow input{width:5.5em;font-size:1.4rem!important;font-family:var(--f-display);font-weight:600}
+.sc-pctrow .sc-dot{min-width:34px;height:34px;font-size:1.3rem}
+.sc-cats{display:flex;flex-wrap:wrap;gap:6px}
+.sc-ws{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
+.sc-ws .chip{min-width:0;padding:7px 0;text-align:center;font-weight:600}
+.sc-err{color:var(--bad);font-weight:600;margin:0;min-height:1em}
+.sc-err:empty{min-height:0}
 #frRoot{display:flex;flex-direction:column;gap:18px}
 .fr-big{display:flex;align-items:center;gap:16px}
 .fr-pool{position:relative;flex:none;width:128px;height:128px;display:grid;place-items:center}
@@ -671,6 +814,26 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
   </section>
 
   <!-- ================= DATA ================= -->
+  <!-- ================= SCHOOL ================= -->
+  <section class="view" id="v-school" aria-labelledby="sc-title-main" hidden>
+  <header>
+    <div>
+      <p class="eyebrow">Rytm</p>
+      <h1 id="sc-title-main">Szkoła</h1>
+      <p class="sub" id="scSub">Oceny, średnie, sprawdziany</p>
+    </div>
+    <button class="upload" type="button" id="scAdd">+ Dodaj ocenę</button>
+  </header>
+  <nav class="tabs swimtabs sctabs" role="tablist" aria-label="Szkoła">
+    <button class="tab" role="tab" id="sct-przedmioty" aria-selected="true">Przedmioty</button>
+    <button class="tab" role="tab" id="sct-analiza" aria-selected="false">Analiza</button>
+    <button class="tab" role="tab" id="sct-wykresy" aria-selected="false">Wykresy</button>
+    <button class="tab" role="tab" id="sct-sprawdziany" aria-selected="false">Sprawdziany</button>
+  </nav>
+  <div class="rope" aria-hidden="true"></div>
+  <div id="scRoot"></div>
+  </section>
+
   <section class="view" id="v-data" aria-labelledby="d-title-main" hidden>
     <header class="vh"><div><p class="eyebrow">Rytm</p><h1 id="d-title-main">Dane</h1></div></header>
     <section class="panel" id="saveCard" hidden aria-labelledby="saveTitle"></section>
@@ -728,10 +891,15 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
   <button class="bb" id="bb-swim" data-view="swim">
     <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M3 15c2 0 2-1.6 4.5-1.6S9.5 15 12 15s2-1.6 4.5-1.6S18.5 15 21 15M3 19.5c2 0 2-1.6 4.5-1.6s2 1.6 4.5 1.6 2-1.6 4.5-1.6 2 1.6 4.5 1.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="15.5" cy="6.5" r="2" fill="currentColor"/><path d="M6 11.5l4.2-3.2 2.8 2.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span>Pływanie</span></button>
+  <button class="bb" id="bb-school" data-view="school">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M2.5 9L12 4.5 21.5 9 12 13.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M6.5 11.2v4.3c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3v-4.3M21.5 9v5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>Szkoła</span></button>
   <button class="bb" id="bb-data" data-view="data">
     <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 6v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
     <span>Dane</span></button>
 </nav>
+
+<div id="scSheet" class="sc-sheet" hidden></div>
 
 <script src="notify.js"></script>
 <script>window.RytmConfig=Object.assign(window.RytmConfig||{},{"legacy": false})</script>
@@ -748,6 +916,7 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
 <script src="habits.js"></script>
 <script src="trainings.js"></script>
 <script src="attendance.js"></script>
+<script src="school.js"></script>
 <script>
 const SAMPLE_CSV = /*SAMPLE_CSV*/null;
 // stage 2B: all data is in the data store (store.js, through bridge.js); the stage-1 keys are only read by the migration
@@ -757,14 +926,16 @@ const $ = id => document.getElementById(id);
 let swimTab = "ov";
 function setHash(h){ try{ history.replaceState(null, "", h); }catch(e){} }
 function showView(v){
-  for(const x of ["habits","swim","data"]){ $("v-"+x).hidden = x !== v; $("bb-"+x).toggleAttribute("aria-current", x === v); }
+  for(const x of ["habits","swim","school","data"]){ $("v-"+x).hidden = x !== v; $("bb-"+x).toggleAttribute("aria-current", x === v); }
   if(v === "swim"){ showTab(swimTab); }
+  else if(v === "school"){ setHash("#szkola"); School.render(); }
   else if(v === "data"){ setHash("#dane"); renderData(); }
   else { setHash("#nawyki"); Habits.render(); }
   try{ window.scrollTo({top:0}); }catch(e){}
 }
 const TAB_HASH = { ov: "#przeglad", tr: "#treningi", rec: "#rekordy", fr: "#frekwencja" };
 const Attendance = window.RytmAttendance;
+const School = window.RytmSchool;
 function showTab(which){
   swimTab = which;
   for(const t of ["ov","tr","rec","fr"]){ $("tab-"+t).setAttribute("aria-selected", t === which); $("p-"+t).hidden = t !== which; }
@@ -1154,7 +1325,7 @@ if(window.claude && typeof window.claude.use === "function") window.claude.use("
 
 // what is on the screen now, including changes that may still be waiting for the database
 function currentState(){
-  return { csvText, fit:{ acts:store.acts, bad:store.bad, last:store.last, hidden:store.hidden }, habits: Habits.exportState(), attendance: Attendance.exportState() };
+  return { csvText, fit:{ acts:store.acts, bad:store.bad, last:store.last, hidden:store.hidden }, habits: Habits.exportState(), attendance: Attendance.exportState(), school: School.exportState() };
 }
 function currentSummary(){ return Backup.build(currentState(), { csvRows: all.length }).summary; }
 
@@ -1212,7 +1383,7 @@ function showPreviewError(errors){
 function renderPreview(){
   const box = $("impPreview"), p = pending;
   if(!p){ box.hidden = true; box.innerHTML = ""; return; }
-  const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni (nawyki)","skippedDays"],["Oznaczone dni treningowe","cancelledTrainings"],["Nieobecności zaznaczone ręcznie","markedAbsences"]];
+  const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni (nawyki)","skippedDays"],["Oznaczone dni treningowe","cancelledTrainings"],["Nieobecności zaznaczone ręcznie","markedAbsences"],["Oceny (szkoła)","schoolGrades"]];
   const when = new Date(p.backup.exportedAt);
   const hasData = Object.values(p.cur).some(v=>typeof v === "number" && v > 0);
   box.hidden = false;
@@ -1340,6 +1511,10 @@ function habitsPersist(){
   return { load: ()=>B.loadHabits(), save: S=>B.saveHabits(S), loadTimer: ()=>B.loadTimer(), saveTimer: t=>B.saveTimer(t),
     readOnly: RytmData.mode !== "normal", statusText: ()=>RytmData.statusText(), whenSaved: RytmData.whenSaved };
 }
+function schoolPersist(){
+  const B = RytmData.bridge;
+  return { load: ()=>B.loadSchool(), save: s=>B.saveSchool(s), whenSaved: RytmData.whenSaved, writable: ()=>RytmData.mode === "normal" };
+}
 function attendancePersist(){
   const B = RytmData.bridge;
   return { load: ()=>B.loadAttendance(), save: a=>B.saveAttendance(a), whenSaved: RytmData.whenSaved, writable: ()=>RytmData.mode === "normal",
@@ -1351,6 +1526,7 @@ function useData(){
   pending = null; renderPreview();
   loadStore();
   Attendance.attach(attendancePersist());
+  School.attach(schoolPersist());
   const csv = RytmData.bridge.loadCsv();
   all = []; csvText = null;
   if(csv || SAMPLE_CSV) load(csv || SAMPLE_CSV, false); else refreshTrainings();
@@ -1361,6 +1537,7 @@ function useData(){
 }
 Trainings.mount({ onDelete: deleteTraining });
 Attendance.mount();
+School.mount();
 window.RytmApp = { useData, exportBackup };
 window.RytmApp.ready = (async ()=>{
   RytmData.init();
@@ -1376,7 +1553,7 @@ window.RytmApp.ready = (async ()=>{
   Habits.mount();
   const startTab = { "#rekordy": "rec", "#przeglad": "ov", "#treningi": "tr", "#frekwencja": "fr" }[location.hash];
   if(RytmData.reason === "przed-migracja"){ showView("habits"); RytmData.showMigration(); }
-  else if(startTab){ swimTab = startTab; showView("swim"); } else if(location.hash === "#dane") showView("data"); else showView("habits");
+  else if(startTab){ swimTab = startTab; showView("swim"); } else if(location.hash === "#dane") showView("data"); else if(location.hash === "#szkola") showView("school"); else showView("habits");
 })();
 </script>
 </body>

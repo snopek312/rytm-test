@@ -5,6 +5,7 @@
 //     fit:     {acts:{id:packed}, bad:{id:[i]}, last:[id], hidden:{trainingId: deletedAtISO}},
 //     habits:  {habits:[...], log:{day:{habitId:value}}, notes:{day:text}, skips:{day:reason}},
 //     attendance: {days:[1..7], from:day|null, cancelled:{day:reason}, absent:{day:""}}   // optional, since 16.10.2026;
+//     school: {v:1, subjects:[...], grades:[{id,sid,pct,w,cat,desc,date,...}], tests:[...], settings:{...}}   // optional, 16.10.2026;
 //   } }                                                                  // older versions ignore it, so it stays format 1
 (function (g) {
   "use strict";
@@ -35,12 +36,13 @@
       skippedDays: Object.keys(h.skips || {}).length,
       cancelledTrainings: Object.keys((data.attendance && data.attendance.cancelled) || {}).length,
       markedAbsences: Object.keys((data.attendance && data.attendance.absent) || {}).length,
+      schoolGrades: ((data.school && data.school.grades) || []).length,
       firstDay: allDays[0] || null,
       lastDay: allDays[allDays.length - 1] || null,
     };
   }
 
-  // state: {csvText, fit:{acts,bad,last,hidden}, habits:{habits,log,notes,skips}, attendance?:{days,from,cancelled}}
+  // state: {csvText, fit:{acts,bad,last,hidden}, habits:{habits,log,notes,skips}, attendance?:{days,from,cancelled}, school?:{...}}
   function build(state, meta = {}) {
     const data = {
       swimCsv: state.csvText ? { text: state.csvText } : null,
@@ -48,6 +50,7 @@
       habits: { habits: state.habits.habits || [], log: state.habits.log || {}, notes: state.habits.notes || {}, skips: state.habits.skips || {} },
     };
     if (state.attendance) data.attendance = { days: state.attendance.days || [], from: state.attendance.from || null, cancelled: state.attendance.cancelled || {}, absent: state.attendance.absent || {} };
+    if (state.school) data.school = state.school;
     const json = JSON.stringify(data);
     return {
       app: "rytm", kind: "backup", format: FORMAT,
@@ -131,6 +134,13 @@
         if (a.absent !== undefined && (!isObj(a.absent) || !Object.entries(a.absent).every(([k, v]) => DAY.test(k) && typeof v === "string"))) errors.push("Lista nieobecności ma zły format.");
       }
     }
+    // school (optional): the shape only; the app cleans the details when it loads it
+    const sc = d.school;
+    if (sc !== undefined && sc !== null) {
+      if (!isObj(sc) || !Array.isArray(sc.subjects) || !Array.isArray(sc.grades) || !Array.isArray(sc.tests) || !isObj(sc.settings)) errors.push("Część „szkoła” ma zły format.");
+      else if (!sc.grades.every(x => isObj(x) && typeof x.id === "string" && typeof x.sid === "string" && typeof x.pct === "number" && x.pct >= 0 && x.pct <= 100 && DAY.test(x.date || "")))
+        errors.push("Lista ocen ma zły format.");
+    }
     const uniq = [...new Set(errors)];
     if (uniq.length) return { ok: false, errors: uniq.slice(0, 8), warnings, backup: null, summary: null };
     return { ok: true, errors: [], warnings, backup: obj, summary: summarize(d, csvRows) };
@@ -147,6 +157,7 @@
     lost("notes", "Notatki");
     lost("cancelledTrainings", "Oznaczone dni treningowe (zawody, odwołane, choroba, wyjazd)");
     lost("markedAbsences", "Nieobecności zaznaczone ręcznie");
+    lost("schoolGrades", "Oceny (szkoła)");
     if (current.lastDay && incoming.lastDay && incoming.lastDay < current.lastDay)
       out.push(`Najnowsze dane w kopii są z ${incoming.lastDay}, a na urządzeniu z ${current.lastDay}.`);
     return out;

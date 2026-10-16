@@ -104,6 +104,11 @@
     const dropUndo = () => commit(diff("snapshots", new Map(), metaOnly("przedImportem")));
     const lastBackup = () => store.status().ostatniaKopia;
 
+    /* ---------- school (Szkoła): subjects, grades, announced tests, settings — one record in meta ---------- */
+    // null = never saved (the app then starts with the default subjects)
+    function loadSchool() { const r = store.get("meta", "school"); return r ? copy(r.data) : null; }
+    const saveSchool = sc => commit(diff("meta", sc ? new Map([["school", { data: sc }]]) : new Map(), metaOnly("school")));
+
     /* ---------- attendance (Frekwencja): training days, start day, skipped days — one record in meta ---------- */
     const attRecord = a => ({ days: (a.days || []).slice(), from: a.from || null, cancelled: Object.assign({}, a.cancelled || {}), absent: Object.assign({}, a.absent || {}) });
     // null = never saved (the app then uses Monday to Saturday from the first swim)
@@ -128,6 +133,8 @@
       if (b) records.meta.push({ id: "backup", lastAt: b.lastAt || null, changesSince: typeof b.changesSince === "number" ? b.changesSince : null });
       // attendance: an optional part (backups from stage 1 and 2B do not have it)
       if (data.attendance) records.meta.push(Object.assign({ id: "attendance" }, copy(attRecord(data.attendance))));
+      // school: an optional part too (since 16.10.2026)
+      if (data.school) records.meta.push({ id: "school", data: copy(data.school) });
       // the note that the old data was already moved stays: otherwise, after loading a backup with no data,
       // the next start would offer moving the old data again
       const mig = store.get("meta", "migration");
@@ -135,7 +142,7 @@
       return records;
     }
 
-    return { loadFit, saveFit, fitOps, loadHabits, saveHabits, habitOps, loadCsv, saveCsv, loadTimer, saveTimer, loadUndo, dropUndo, lastBackup, recordsFromBackup, loadAttendance, saveAttendance };
+    return { loadFit, saveFit, fitOps, loadHabits, saveHabits, habitOps, loadCsv, saveCsv, loadTimer, saveTimer, loadUndo, dropUndo, lastBackup, recordsFromBackup, loadAttendance, saveAttendance, loadSchool, saveSchool };
   }
 
   const api = { create };
