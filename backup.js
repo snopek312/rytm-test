@@ -145,7 +145,7 @@
     lost("habits", "Nawyki");
     lost("habitDays", "Dni z wpisami nawyków");
     lost("notes", "Notatki");
-    lost("cancelledTrainings", "Pominięte dni treningowe");
+    lost("cancelledTrainings", "Oznaczone dni treningowe (zawody, odwołane, choroba, wyjazd)");
     lost("markedAbsences", "Nieobecności zaznaczone ręcznie");
     if (current.lastDay && incoming.lastDay && incoming.lastDay < current.lastDay)
       out.push(`Najnowsze dane w kopii są z ${incoming.lastDay}, a na urządzeniu z ${current.lastDay}.`);
