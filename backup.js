@@ -6,6 +6,7 @@
 //     habits:  {habits:[...], log:{day:{habitId:value}}, notes:{day:text}, skips:{day:reason}},
 //     attendance: {days:[1..7], from:day|null, cancelled:{day:reason}, absent:{day:""}}   // optional, since 16.10.2026;
 //     school: {v:1, subjects:[...], grades:[{id,sid,pct,w,cat,desc,date,...}], tests:[...], settings:{...}}   // optional, 16.10.2026;
+//     manualRecords: {v:1, entries:[{id,pool,stroke,dist,time,date,kind,note,fix,fixTime}]}   // optional, 17.10.2026;
 //   } }                                                                  // older versions ignore it, so it stays format 1
 (function (g) {
   "use strict";
@@ -37,6 +38,7 @@
       cancelledTrainings: Object.keys((data.attendance && data.attendance.cancelled) || {}).length,
       markedAbsences: Object.keys((data.attendance && data.attendance.absent) || {}).length,
       schoolGrades: ((data.school && data.school.grades) || []).length,
+      manualRecords: ((data.manualRecords && data.manualRecords.entries) || []).length,
       firstDay: allDays[0] || null,
       lastDay: allDays[allDays.length - 1] || null,
     };
@@ -51,6 +53,7 @@
     };
     if (state.attendance) data.attendance = { days: state.attendance.days || [], from: state.attendance.from || null, cancelled: state.attendance.cancelled || {}, absent: state.attendance.absent || {} };
     if (state.school) data.school = state.school;
+    if (state.manualRecords) data.manualRecords = state.manualRecords;
     const json = JSON.stringify(data);
     return {
       app: "rytm", kind: "backup", format: FORMAT,
@@ -141,6 +144,13 @@
       else if (!sc.grades.every(x => isObj(x) && typeof x.id === "string" && typeof x.sid === "string" && typeof x.pct === "number" && x.pct >= 0 && x.pct <= 100 && DAY.test(x.date || "")))
         errors.push("Lista ocen ma zły format.");
     }
+    // results typed in by hand (optional): the shape only; the app cleans the details when it loads it
+    const mr = d.manualRecords;
+    if (mr !== undefined && mr !== null) {
+      if (!isObj(mr) || !Array.isArray(mr.entries)) errors.push("Część „wyniki wpisane ręcznie” ma zły format.");
+      else if (!mr.entries.every(x => isObj(x) && typeof x.id === "string" && typeof x.time === "number" && x.time > 0 && typeof x.dist === "number" && typeof x.stroke === "string" && DAY.test(x.date || "")))
+        errors.push("Lista wyników wpisanych ręcznie ma zły format.");
+    }
     const uniq = [...new Set(errors)];
     if (uniq.length) return { ok: false, errors: uniq.slice(0, 8), warnings, backup: null, summary: null };
     return { ok: true, errors: [], warnings, backup: obj, summary: summarize(d, csvRows) };
@@ -158,6 +168,7 @@
     lost("cancelledTrainings", "Oznaczone dni treningowe (zawody, odwołane, choroba, wyjazd)");
     lost("markedAbsences", "Nieobecności zaznaczone ręcznie");
     lost("schoolGrades", "Oceny (szkoła)");
+    lost("manualRecords", "Wyniki wpisane ręcznie (rekordy)");
     if (current.lastDay && incoming.lastDay && incoming.lastDay < current.lastDay)
       out.push(`Najnowsze dane w kopii są z ${incoming.lastDay}, a na urządzeniu z ${current.lastDay}.`);
     return out;

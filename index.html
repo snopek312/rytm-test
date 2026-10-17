@@ -107,6 +107,32 @@ ol.steps{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px;
 .cell.new{background:var(--gold-soft);border-color:var(--rope)}
 .cell .badge{position:absolute;top:-7px;right:-3px;background:var(--rope);color:var(--on-gold);font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:1px 5px;border-radius:4px}
 .cell[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+/* results typed in by hand (records.js): a tag in the corner says where the time comes from */
+.cell.man{border-color:var(--accent)}
+.cell .src{position:absolute;top:-7px;left:-3px;background:var(--accent);color:var(--bg);font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 4px;border-radius:4px;line-height:1.3}
+/* five columns (with "Zmienny") must still fit a phone: narrower distance column, tighter cells, smaller text */
+.board.wide{border-spacing:3px;min-width:0}
+.board.wide thead th{font-size:.82rem;letter-spacing:0}
+.board.wide th.dist{width:34px;padding-right:3px;font-size:.95rem;white-space:nowrap}
+.board.wide th.dist small{display:none}
+.board.wide .cell{padding:5px 1px;min-height:48px}
+.board.wide .cell .t{font-size:.7rem;letter-spacing:-.02em}
+.board.wide .cell .dt{font-size:.58rem}
+.board.wide .cell .src,.board.wide .cell .badge{font-size:.5rem;padding:1px 3px}
+.hist .hk{display:inline-block;margin-left:6px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.rm-time{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rm-time input{width:3.6em;text-align:center;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.rm-time output{margin-left:4px}
+.rm-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.rm-row{width:100%;display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 2px;color:var(--fg);font:inherit;cursor:pointer}
+.rm-list li:last-child .rm-row{border-bottom:0}
+.rm-row:disabled{cursor:default}
+.rm-row:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.rm-d{color:var(--muted);font-size:.82rem;min-width:3.6em}
+.rm-w small{display:block;color:var(--muted);font-size:.78rem}
+.rm-t{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.rm-t .rm-rec{display:block;font-family:var(--f-body,inherit);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--good)}
+.rm-tag{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 5px}
 .banner{border:1px solid var(--rope);background:var(--gold-soft);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .banner.info{border-color:var(--line);background:var(--surface)}
 .banner.err{border-color:var(--bad);background:var(--surface)}
@@ -783,6 +809,7 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
       <p class="meta" id="recCount">Brak wczytanych plików FIT</p>
       <div class="controls">
         <button class="btn link" id="restoreBad" hidden></button>
+        <button class="btn" id="recAdd" type="button">+ Dodaj wynik</button>
       </div>
     </div>
 
@@ -804,12 +831,13 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
       </div>
       <p class="note warn" id="poolNote" hidden></p>
       <div class="tablewrap"><table class="board" id="board"></table></div>
-      <p class="note">Złote pole to rekord pobity w ostatnio dodanych plikach. Dotknij czasu, żeby zobaczyć szczegóły i historię.</p>
+      <p class="note">Złote pole to rekord pobity w ostatnio dodanych plikach. Znaczek „zawody”, „ręcznie” albo „poprawka” to wynik wpisany przez ciebie. Dotknij czasu, żeby zobaczyć szczegóły i historię.</p>
     </section>
 
     <section class="panel" id="recDetail" hidden></section>
+    <section class="panel" id="recManual" hidden></section>
 
-    <p class="note">Rekordy są osobne dla każdej długości basenu. Długość bierzemy z pliku FIT (to, co ustawiłeś w zegarku) i sprawdzamy, czy zgadza się z liczbą długości i dystansem zapisanym w pliku. Liczą się tylko długości przepłynięte jednym stylem bez przerwy. Odpoczynek, pauza dłuższa niż 3 s, ćwiczenia (drill) i długości mieszane przerywają odcinek. Pomijam też długości, które wyglądają na błąd zegarka: dużo szybsze niż reszta tego samego treningu, z dużo mniejszą liczbą ruchów albo szybsze niż rekord świata. Zwykle to jedna długość policzona jako dwie. Jeśli coś nadal nie pasuje, dotknij czasu i wybierz „To błąd zegarka”. Czasy liczy zegarek od ściany do ściany, więc nie są to czasy ze startu ze słupka.</p>
+    <p class="note">Rekordy są osobne dla każdej długości basenu. Długość bierzemy z pliku FIT (to, co ustawiłeś w zegarku) i sprawdzamy, czy zgadza się z liczbą długości i dystansem zapisanym w pliku. Liczą się tylko długości przepłynięte jednym stylem bez przerwy. Odpoczynek, pauza dłuższa niż 3 s, ćwiczenia (drill) i długości mieszane przerywają odcinek. Pomijam też długości, które wyglądają na błąd zegarka: dużo szybsze niż reszta tego samego treningu, z dużo mniejszą liczbą ruchów albo szybsze niż rekord świata. Zwykle to jedna długość policzona jako dwie. Jeśli coś nadal nie pasuje, dotknij czasu i wybierz „To błąd zegarka”. Czasy liczy zegarek od ściany do ściany, więc nie są to czasy ze startu ze słupka. Wyniki z zawodów i to, czego nie ma na zegarku, dopiszesz przyciskiem „+ Dodaj wynik”. Zły czas z zegarka poprawisz w szczegółach rekordu („Popraw czas”).</p>
   </section>
   </section>
 
@@ -900,6 +928,7 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
 </nav>
 
 <div id="scSheet" class="sc-sheet" hidden></div>
+<div id="rmSheet" class="sc-sheet" hidden></div>
 
 <script src="notify.js"></script>
 <script>window.RytmConfig=Object.assign(window.RytmConfig||{},{"legacy": false})</script>
@@ -917,6 +946,7 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
 <script src="trainings.js"></script>
 <script src="attendance.js"></script>
 <script src="school.js"></script>
+<script src="records.js"></script>
 <script>
 const SAMPLE_CSV = /*SAMPLE_CSV*/null;
 // stage 2B: all data is in the data store (store.js, through bridge.js); the stage-1 keys are only read by the migration
@@ -936,6 +966,7 @@ function showView(v){
 const TAB_HASH = { ov: "#przeglad", tr: "#treningi", rec: "#rekordy", fr: "#frekwencja" };
 const Attendance = window.RytmAttendance;
 const School = window.RytmSchool;
+const Records = window.RytmRecords;
 function showTab(which){
   swimTab = which;
   for(const t of ["ov","tr","rec","fr"]){ $("tab-"+t).setAttribute("aria-selected", t === which); $("p-"+t).hidden = t !== which; }
@@ -1115,19 +1146,24 @@ function activeData(){
   return { acts, bad: store.bad, last: store.last };
 }
 
+// the records on the board: the watch's (from the FIT files) merged with the results typed in by hand (records.js);
+// the example data shows the watch's alone
+function recordsNow(data = activeData()){ return demo ? Swim.computeRecords(data.acts, data.bad) : Records.merge(data.acts, data.bad); }
 function renderRecords(){
   const data = activeData();
-  const n = Object.keys(data.acts).length;
-  const rec = Swim.computeRecords(data.acts, data.bad);
+  const n = Object.keys(data.acts).length, nMan = demo ? 0 : Records.state.entries.length;
+  const rec = recordsNow(data);
   const lastSet = new Set(data.last);
   $("recEmpty").hidden = n > 0;
-  $("recCount").textContent = demo ? "Przykładowe dane" : n ? `${n} ${plural(n,"trening","treningi","treningów")} z długościami basenu` : "Brak wczytanych plików FIT";
+  $("recCount").textContent = demo ? "Przykładowe dane" : (n ? `${n} ${plural(n,"trening","treningi","treningów")} z długościami basenu` : "Brak wczytanych plików FIT")
+    + (nMan ? ` · ${nMan} ${plural(nMan,"wynik wpisany","wyniki wpisane","wyników wpisanych")} ręcznie` : "");
   const nBad = Object.values(store.bad).reduce((s,a)=>s+a.length,0);
   $("restoreBad").hidden = demo || !nBad;
   $("restoreBad").textContent = `Przywróć pominięte długości (${nBad})`;
-  // records are kept per pool length taken from the FIT files; a switch appears only when there is more than one
-  const P = Swim.poolsOf(data.acts);
-  if(!P.pools.some(p=>p.pool===recPool)) recPool = P.pools.length ? [...P.pools].sort((a,b)=>b.n-a.n || a.pool-b.pool)[0].pool : null;
+  $("recAdd").disabled = !!demo || !Records.canWrite();
+  // records are kept per pool length (from the FIT files and from typed results); a switch appears only when there is more than one
+  const P = demo ? Swim.poolsOf(data.acts) : Records.pools(data.acts);
+  if(!P.pools.some(p=>p.pool===recPool)) recPool = demo ? (P.pools.length ? [...P.pools].sort((a,b)=>b.n-a.n || a.pool-b.pool)[0].pool : null) : Records.mainPool(P.pools);
   $("boardMeta").innerHTML = P.pools.length > 1
     ? `<span class="seg small pools" role="group" aria-label="Długość basenu">${P.pools.map(p=>`<button class="seg-b" data-pool="${p.pool}" aria-pressed="${p.pool===recPool}">Basen ${esc(Swim.fmtPool(p.pool))}</button>`).join("")}</span>`
     : recPool ? `basen ${esc(Swim.fmtPool(recPool))}` : "";
@@ -1135,18 +1171,23 @@ function renderRecords(){
   $("poolNote").hidden = !P.excluded.length;
   $("poolNote").textContent = P.excluded.length ? `${P.excluded.length} ${plural(P.excluded.length,"trening nie liczy","treningi nie liczą","treningów nie liczy")} się do rekordów, bo długość basenu w pliku FIT nie zgadza się z liczbą długości lub dystansem (${P.excluded.map(x=>dayFmt.format(new Date(x.start))).join(", ")}). Sprawdź, czy w zegarku była ustawiona właściwa długość basenu.` : "";
 
-  let html = `<thead><tr><th class="dist" scope="col" aria-label="Dystans"></th>${Swim.STROKES.map(s=>`<th scope="col">${s.name}</th>`).join("")}</tr></thead><tbody>`;
-  for(const D of Swim.DISTANCES){
+  // rows and columns: the usual ones, plus 400/1500 m and "Zmienny" when a typed result in this pool needs them
+  const dists = demo || recPool == null ? Swim.DISTANCES : Records.distances(recPool);
+  const strokes = demo || recPool == null ? Swim.STROKES : Records.strokes(recPool);
+  let html = `<thead><tr><th class="dist" scope="col" aria-label="Dystans"></th>${strokes.map(s=>`<th scope="col">${s.name}</th>`).join("")}</tr></thead><tbody>`;
+  for(const D of dists){
     html += `<tr><th class="dist" scope="row">${D}<small> m</small></th>`;
-    for(const s of Swim.STROKES){
+    for(const s of strokes){
       const key = recPool ? Swim.recKey(recPool, s.id, D) : "", r = rec[key];
       if(!r){ html += `<td><div class="cell empty" aria-label="${D} m ${s.inst}: brak wyniku">–</div></td>`; continue; }
-      const isNew = lastSet.has(r.actId) && r.history.length > 1;
-      html += `<td><button class="cell${isNew?" new":""}" data-key="${key}" aria-pressed="${selected===key}" aria-label="${D} m ${s.inst}: ${Swim.fmtTime(r.time)}${isNew?", nowy rekord":""}">
-        ${isNew?'<span class="badge">nowy</span>':""}<span class="t">${Swim.fmtTime(r.time)}</span><span class="dt">${dayFmt.format(new Date(r.date))}</span></button></td>`;
+      const isNew = r.src !== "manual" && lastSet.has(r.actId) && r.history.length > 1;
+      const tag = Records.tag(r), t = Records.fmt(r);
+      html += `<td><button class="cell${isNew?" new":""}${tag?" man":""}" data-key="${key}" aria-pressed="${selected===key}" aria-label="${D} m ${s.inst}: ${t}${isNew?", nowy rekord":""}${tag?`, ${tag}`:""}">
+        ${isNew?'<span class="badge">nowy</span>':""}${tag?`<span class="src">${tag}</span>`:""}<span class="t">${t}</span><span class="dt">${dayFmt.format(new Date(r.date))}</span></button></td>`;
     }
     html += `</tr>`;
   }
+  $("board").classList.toggle("wide", strokes.length > 4);
   $("board").innerHTML = html + "</tbody>";
   $("board").querySelectorAll("button.cell").forEach(b=>b.addEventListener("click",()=>{
     selected = selected===b.dataset.key ? null : b.dataset.key; confirmBad = false; renderRecords();
@@ -1154,29 +1195,41 @@ function renderRecords(){
     if(selected) $("recDetail").scrollIntoView?.({behavior:reduce?"auto":"smooth",block:"nearest"});
   }));
   renderDetail(rec, data);
+  if(demo){ $("recManual").hidden = true; $("recManual").innerHTML = ""; } else Records.renderList(recPool, rec);
 }
 
 function renderDetail(rec, data){
   const box = $("recDetail"), r = selected && rec[selected];
   if(!r){ box.hidden = true; box.innerHTML = ""; return; }
-  const s = Swim.STROKES.find(x=>x.id===r.stroke);
-  const act = data.acts[r.actId];
-  const splits = r.idx.map(i=>act.lengths[i].t);
+  const s = Records.STROKES.find(x=>x.id===r.stroke);
+  const man = r.src === "manual", e = man ? Records.entry(r.entry) : null;
+  const act = man ? null : data.acts[r.actId];
+  const splits = act ? r.idx.map(i=>act.lengths[i].t) : [];
   const hist = [...r.history].reverse();
+  const manyPools = (demo ? Swim.poolsOf(data.acts) : Records.pools(data.acts)).pools.length > 1;
+  const where = man ? `${e.fix ? `poprawiony czas z treningu${e.fixTime != null ? ` (zegarek: ${Swim.fmtTime(e.fixTime)})` : ""}` : Records.KINDS.find(k=>k.id===e.kind).long} · ` : "";
+  const ht = h => h.src === "manual" ? Records.fmtHund(h.time) : Swim.fmtTime(h.time);
+  const hk = h => h.src === "manual" ? `<span class="hk">${h.fix ? "poprawka" : Records.KINDS.find(k=>k.id===h.kind).tag}</span>` : "";
+  const canFix = !demo && !man && Records.canWrite();
   box.hidden = false;
   box.innerHTML = `
-    <div class="row"><h2>${r.dist} m ${s.inst}${Swim.poolsOf(data.acts).pools.length>1?` · basen ${esc(Swim.fmtPool(r.pool))}`:""}</h2><button class="btn" id="closeDetail">Zamknij</button></div>
-    <div class="big">${Swim.fmtTime(r.time)}</div>
-    <p class="meta">tempo ${Swim.fmtPace(r.time, r.dist)} /100 m · basen ${r.pool.toLocaleString("pl-PL")} m · ${longDay.format(new Date(r.date))}</p>
+    <div class="row"><h2>${r.dist} m ${s.inst}${manyPools?` · basen ${esc(Swim.fmtPool(r.pool))}`:""}</h2><button class="btn" id="closeDetail">Zamknij</button></div>
+    <div class="big">${Records.fmt(r)}</div>
+    <p class="meta">${where}tempo ${Swim.fmtPace(r.time, r.dist)} /100 m · basen ${r.pool.toLocaleString("pl-PL")} m · ${longDay.format(new Date(r.date))}</p>
+    ${man && e.note ? `<p>${esc(e.note)}</p>` : ""}
     ${splits.length>1?`<div><p class="meta">Długości po ${r.pool.toLocaleString("pl-PL")} m</p><div class="splits">${splits.map(t=>`<span>${Swim.fmtTime(t)}</span>`).join("")}</div></div>`:""}
     <div><p class="meta">Historia rekordu</p><ol class="hist">${hist.map((h,i)=>{
       const prev = hist[i+1];
-      const ch = prev ? `−${(prev.time-h.time).toFixed(1).replace(".",",")} s` : "pierwszy wynik";
-      return `<li><span>${longDay.format(new Date(h.date))}</span><span class="tm">${Swim.fmtTime(h.time)}</span><span class="ch${prev?"":" first"}">${ch}</span></li>`;}).join("")}</ol></div>
-    ${demo ? "" : `<div class="actions">${confirmBad
+      const ch = prev ? `−${(prev.time-h.time).toFixed(prev.src === "manual" && h.src === "manual" ? 2 : 1).replace(".",",")} s` : "pierwszy wynik";
+      return `<li><span>${longDay.format(new Date(h.date))}${hk(h)}</span><span class="tm">${ht(h)}</span><span class="ch${prev?"":" first"}">${ch}</span></li>`;}).join("")}</ol></div>
+    ${demo ? "" : man
+      ? `<div class="actions"><button class="btn" id="recEdit" ${Records.canWrite() ? "" : "disabled"}>${e.fix ? "Zmień poprawkę" : "Edytuj"}</button></div>`
+      : `<div class="actions">${confirmBad
       ? `<button class="btn danger" id="badYes">Pomiń ${r.idx.length===1?"tę długość":"te "+r.idx.length+" długości"}</button><button class="btn" id="badNo">Anuluj</button><span class="meta">Rekord przejdzie na następny najlepszy wynik.</span>`
-      : `<button class="btn link" id="badAsk">To błąd zegarka</button>`}</div>`}`;
+      : `<button class="btn" id="recFix" ${canFix ? "" : "disabled"}>Popraw czas</button><button class="btn link" id="badAsk">To błąd zegarka</button>`}</div>`}`;
   $("closeDetail").onclick = ()=>{ selected=null; renderRecords(); };
+  if($("recEdit")) $("recEdit").onclick = ()=>Records.openEdit(r.entry);
+  if($("recFix")) $("recFix").onclick = ()=>Records.openFix(r);
   if($("badAsk")) $("badAsk").onclick = ()=>{ confirmBad=true; renderRecords(); };
   if($("badNo")) $("badNo").onclick = ()=>{ confirmBad=false; renderRecords(); };
   if($("badYes")) $("badYes").onclick = ()=>{
@@ -1225,7 +1278,7 @@ async function importFits(fileList){
     const files = [], log = [];
     for(const f of fileList) files.push({ name:f.name, bytes:new Uint8Array(await f.arrayBuffer()) });
     const fits = Swim.expandFiles(files, 0, log);
-    const before = Swim.computeRecords(activeData().acts, store.bad);
+    const before = recordsNow();
     let added = [], dup = 0, yards = 0, broken = 0, upd = 0;
     for(let i=0;i<fits.length;i++){
       if(i % 10 === 9){ showBanner("info", `Wczytuję pliki… ${i+1} z ${fits.length}`, []); await new Promise(r=>setTimeout(r,0)); }
@@ -1259,11 +1312,11 @@ async function importFits(fileList){
     store.last = added;
     const res = saveStore();
     if(!res.ok){ selected = null; renderRecords(); refreshTrainings(); showBanner("err", "Nie dodano treningów", [esc(writingOffText())]); return; }   // writing is off: nothing was added
-    const after = Swim.computeRecords(activeData().acts, store.bad);
+    const after = recordsNow();
     const diff = Swim.diffRecords(before, after);
     const beaten = diff.filter(d=>d.prev!==null), first = diff.filter(d=>d.prev===null);
-    const many = Swim.poolsOf(activeData().acts).pools.length > 1;
-    const name = d => { const s = Swim.STROKES.find(x=>x.id===d.rec.stroke); return `${d.rec.dist} m ${s.inst}${many ? ` (basen ${Swim.fmtPool(d.rec.pool)})` : ""}`; };
+    const many = Records.pools(activeData().acts).pools.length > 1;
+    const name = d => { const s = Records.STROKES.find(x=>x.id===d.rec.stroke); return `${d.rec.dist} m ${s.inst}${many ? ` (basen ${Swim.fmtPool(d.rec.pool)})` : ""}`; };
     const lines = beaten.slice(0,8).map(d=>`${name(d)}: <b>${Swim.fmtTime(d.rec.time)}</b> (było ${Swim.fmtTime(d.prev)})`);
     if(beaten.length>8) lines.push(`i ${beaten.length-8} więcej`);
     if(first.length) lines.push(`${first.length} ${plural(first.length,"pierwszy wynik","pierwsze wyniki","pierwszych wyników")} na nowych dystansach lub stylach`);
@@ -1325,7 +1378,7 @@ if(window.claude && typeof window.claude.use === "function") window.claude.use("
 
 // what is on the screen now, including changes that may still be waiting for the database
 function currentState(){
-  return { csvText, fit:{ acts:store.acts, bad:store.bad, last:store.last, hidden:store.hidden }, habits: Habits.exportState(), attendance: Attendance.exportState(), school: School.exportState() };
+  return { csvText, fit:{ acts:store.acts, bad:store.bad, last:store.last, hidden:store.hidden }, habits: Habits.exportState(), attendance: Attendance.exportState(), school: School.exportState(), manualRecords: Records.exportState() };
 }
 function currentSummary(){ return Backup.build(currentState(), { csvRows: all.length }).summary; }
 
@@ -1383,7 +1436,7 @@ function showPreviewError(errors){
 function renderPreview(){
   const box = $("impPreview"), p = pending;
   if(!p){ box.hidden = true; box.innerHTML = ""; return; }
-  const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni (nawyki)","skippedDays"],["Oznaczone dni treningowe","cancelledTrainings"],["Nieobecności zaznaczone ręcznie","markedAbsences"],["Oceny (szkoła)","schoolGrades"]];
+  const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni (nawyki)","skippedDays"],["Oznaczone dni treningowe","cancelledTrainings"],["Nieobecności zaznaczone ręcznie","markedAbsences"],["Oceny (szkoła)","schoolGrades"],["Wyniki wpisane ręcznie (rekordy)","manualRecords"]];
   const when = new Date(p.backup.exportedAt);
   const hasData = Object.values(p.cur).some(v=>typeof v === "number" && v > 0);
   box.hidden = false;
@@ -1515,6 +1568,11 @@ function schoolPersist(){
   const B = RytmData.bridge;
   return { load: ()=>B.loadSchool(), save: s=>B.saveSchool(s), whenSaved: RytmData.whenSaved, writable: ()=>RytmData.mode === "normal" };
 }
+function recordsPersist(){
+  const B = RytmData.bridge;
+  return { load: ()=>B.loadManualRecords(), save: m=>B.saveManualRecords(m), whenSaved: RytmData.whenSaved, writable: ()=>RytmData.mode === "normal",
+    data: ()=>{ const d = activeData(); return { acts: demo ? {} : d.acts, bad: demo ? {} : d.bad }; }, onChange: ()=>renderRecords() };
+}
 function attendancePersist(){
   const B = RytmData.bridge;
   return { load: ()=>B.loadAttendance(), save: a=>B.saveAttendance(a), whenSaved: RytmData.whenSaved, writable: ()=>RytmData.mode === "normal",
@@ -1527,6 +1585,7 @@ function useData(){
   loadStore();
   Attendance.attach(attendancePersist());
   School.attach(schoolPersist());
+  Records.attach(recordsPersist());
   const csv = RytmData.bridge.loadCsv();
   all = []; csvText = null;
   if(csv || SAMPLE_CSV) load(csv || SAMPLE_CSV, false); else refreshTrainings();
@@ -1538,6 +1597,8 @@ function useData(){
 Trainings.mount({ onDelete: deleteTraining });
 Attendance.mount();
 School.mount();
+Records.mount();
+$("recAdd").addEventListener("click", ()=>{ if(!demo) Records.openAdd({ pool: recPool || undefined }); });
 window.RytmApp = { useData, exportBackup };
 window.RytmApp.ready = (async ()=>{
   RytmData.init();
