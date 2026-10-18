@@ -1,7 +1,7 @@
 // Rytm: goals (Cele) — a big goal split into steps with dates. Undone steps with a date appear on the "Dziś" screen and
-// in the calendar; late ones are listed as "Zaległe kroki". Templates give a ready list of steps (MIT, an exchange year in
-// the USA) that the user edits as he likes.
-// Saved state (one record in meta "goals"): {v:1, goals:[{id, title, area, note, deadline, created, steps:[{id, title, date, done, doneAt}]}]}
+// in the calendar; late ones are listed as "Zaległe kroki". Two goals are there from the start (MIT and an exchange year
+// in the USA, from the templates); the user edits, reorders (arrows) or deletes their steps as he likes.
+// Saved state (one record in meta "goals"): {v:1, seeded, goals:[{id, title, area, note, deadline, created, steps:[{id, title, date, done, doneAt}]}]}
 (function (g) {
   "use strict";
 
@@ -17,7 +17,7 @@
   const dayOr = v => (typeof v === "string" && DAY.test(v) ? v : null);
   const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-  function defaults() { return { v: 1, goals: [] }; }
+  function defaults() { return { v: 1, seeded: false, goals: [] }; }
   function normalize(raw) {
     const o = raw && typeof raw === "object" ? raw : null;
     if (!o) return defaults();
@@ -28,13 +28,14 @@
         steps: (Array.isArray(x.steps) ? x.steps : []).filter(s => s && typeof s.id === "string" && s.id && str(s.title, 160) && !ss.has(s.id) && ss.add(s.id))
           .map(s => ({ id: s.id, title: str(s.title, 160), date: dayOr(s.date), done: s.done === true, doneAt: s.done === true ? dayOr(s.doneAt) : null })) };
     });
-    return { v: 1, goals };
+    return { v: 1, seeded: o.seeded === true, goals };
   }
   // steps in date order; steps without a date go last, in the order they were added
   const byDate = (a, b) => ((a.date || "9999-99-99") < (b.date || "9999-99-99") ? -1 : (a.date || "9999-99-99") > (b.date || "9999-99-99") ? 1 : 0);
   const sortSteps = steps => steps.slice().sort(byDate);
   function progress(goal) { const total = goal.steps.length, done = goal.steps.filter(s => s.done).length; return { total, done, pct: total ? Math.round(done / total * 100) : 0 }; }
-  const nextStep = goal => sortSteps(goal.steps.filter(s => !s.done))[0] || null;
+  // the next step: the first undone one in the user's own order
+  const nextStep = goal => goal.steps.find(s => !s.done) || null;
   // undone steps with a date in [from, to] (both days included), with their goal, in date order
   function dueBetween(state, from, to) {
     const out = [];
@@ -58,15 +59,24 @@
       steps: [["Zgłoszenie (wpisz termin)", null], ["Rozmowa kwalifikacyjna", null], ["Rozmowa z wychowawcą i dyrekcją: jak nadrobić rok bez powtarzania klasy", null],
         ["Plan nadrabiania materiału (zakładka Nauka)", null], ["Paszport i wiza", null], ["Ubezpieczenie i sprawy organizacyjne", null], ["Wyjazd", null]] }) },
   ];
-  // a template -> a goal with new ids
-  function fromTemplate(id, year, today) {
+  // a template -> a goal; fixed = ids that are the same every time (the goals there from the start)
+  function fromTemplate(id, year, today, fixed) {
     const t = TEMPLATES.find(x => x.id === id); if (!t) return null;
     const m = t.make(year);
-    return { id: newId("g"), title: m.title, area: m.area, note: m.note, deadline: m.deadline, created: today,
-      steps: m.steps.map(([title, date]) => ({ id: newId("s"), title, date, done: false, doneAt: null })) };
+    return { id: fixed ? `g-${id}` : newId("g"), title: m.title, area: m.area, note: m.note, deadline: m.deadline, created: today,
+      steps: m.steps.map(([title, date], i) => ({ id: fixed ? `g-${id}-${i + 1}` : newId("s"), title, date, done: false, doneAt: null })) };
+  }
+  // the year of applying to a US university, for the MIT template: two school years from now (autumn)
+  const applyYear = today => { const d = parseDay(today); return (d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1) + 2; };
+  // the goals there from the start: added once (the flag "seeded"); a goal deleted later does not come back
+  function seed(state, today) {
+    if (state.seeded) return state;
+    const out = { v: 1, seeded: true, goals: state.goals.slice() };
+    for (const t of TEMPLATES) if (!out.goals.some(x => x.id === `g-${t.id}` || x.title === t.make(applyYear(today)).title)) out.goals.push(fromTemplate(t.id, applyYear(today), today, true));
+    return out;
   }
 
-  const core = { AREAS, TEMPLATES, defaults, normalize, sortSteps, progress, nextStep, dueBetween, overdue, fromTemplate, dayKey, parseDay, daysBetween };
+  const core = { AREAS, TEMPLATES, defaults, normalize, sortSteps, progress, nextStep, dueBetween, overdue, fromTemplate, applyYear, seed, dayKey, parseDay, daysBetween };
 
   /* ================= view ================= */
   const doc = g.document;
@@ -88,7 +98,8 @@
   const goalById = id => S.goals.find(x => x.id === id) || null;
   const changed = () => { if (P && P.onChange) try { P.onChange(); } catch (e) {} };
 
-  function attach(persist) { P = persist || null; S = normalize(P && P.load ? P.load() : null); ui.sheet = null; if (ui.open && !goalById(ui.open)) ui.open = null; render(); }
+  // the two goals from the start are added in memory and saved with the first change
+  function attach(persist) { P = persist || null; S = seed(normalize(P && P.load ? P.load() : null), today()); ui.sheet = null; if (ui.open && !goalById(ui.open)) ui.open = null; render(); }
   function exportState() { return JSON.parse(JSON.stringify(S)); }
   function save(next, okText, undoTo) {
     if (!P || !P.save) return false;
@@ -117,7 +128,6 @@
     }).join("");
     return `<section class="panel"><div class="row"><h2>Twoje cele</h2><button type="button" class="btn primary" data-glact="new" ${dis}>+ Nowy cel</button></div>
         <p class="hint">Duży cel rozbij na kroki z datami. Kroki z datą pokażą się na ekranie Dziś i w kalendarzu.</p>
-        <div class="lf-chips"><span class="meta">Z szablonu:</span>${TEMPLATES.map(t => `<button type="button" class="chip" data-glact="tpl" data-t="${t.id}" ${dis}>${esc(t.name)}</button>`).join("")}</div>
         ${S.goals.length ? "" : `<p class="meta">Nie masz jeszcze celów.</p>`}</section>
       ${late.length ? `<section class="panel gl-late"><h2>Zaległe kroki</h2><ul class="lf-list">${late.map(({ goal, step }) => `<li><button type="button" class="lf-row" data-glact="open" data-gid="${esc(goal.id)}"><span class="lf-d">${esc(fmtShort.format(parseDay(step.date)))}</span><span>${esc(step.title)}<small>${esc(goal.title)}</small></span><span class="lf-late">${esc(when(daysBetween(T, step.date)))}</span></button></li>`).join("")}</ul></section>` : ""}
       ${cards}`;
@@ -125,16 +135,16 @@
 
   function goalView(goal) {
     const T = today(), p = progress(goal), dis = canWrite() ? "" : "disabled";
-    const steps = sortSteps(goal.steps);
+    const steps = goal.steps;
     return `<div class="row"><button type="button" class="btn link" data-glact="back">‹ Wszystkie cele</button></div>
       <section class="panel gl-detail">
         <div class="row"><h2>${esc(goal.title)}</h2><span class="lf-tag">${esc(areaName(goal.area))}</span></div>
         ${bar(p.pct)}<p class="meta">${p.done} z ${p.total} ${plural(p.total, "kroku", "kroków", "kroków")} (${p.pct}%)${goal.deadline ? ` · termin: ${esc(fmtLong.format(parseDay(goal.deadline)))} (${when(daysBetween(T, goal.deadline))})` : ""}</p>
         ${goal.note ? `<p class="gl-note">${esc(goal.note)}</p>` : ""}
-        <ul class="gl-steps">${steps.map(s => `<li class="gl-step${s.done ? " done" : ""}${!s.done && s.date && s.date < T ? " late" : ""}">
+        <ul class="gl-steps">${steps.map((s, i) => `<li class="gl-step${s.done ? " done" : ""}${!s.done && s.date && s.date < T ? " late" : ""}">
           <button type="button" class="gl-check" data-glact="toggle" data-sid="${esc(s.id)}" aria-pressed="${s.done}" aria-label="${s.done ? "Zrobione" : "Do zrobienia"}: ${esc(s.title)}" ${dis}>${s.done ? "✓" : ""}</button>
           <span class="gl-st"><span class="gl-tt">${esc(s.title)}</span><small>${esc(s.done && s.doneAt ? `zrobione ${fmtShort.format(parseDay(s.doneAt))}` : stepWhen(s, T))}</small></span>
-          <button type="button" class="icon-btn" data-glact="editStep" data-sid="${esc(s.id)}" aria-label="Edytuj krok: ${esc(s.title)}" ${dis}>✎</button></li>`).join("")}</ul>
+          <span class="gl-move"><button type="button" class="icon-btn" data-glact="up" data-sid="${esc(s.id)}" aria-label="Przesuń wyżej: ${esc(s.title)}" ${dis || (i === 0 ? "disabled" : "")}>↑</button><button type="button" class="icon-btn" data-glact="down" data-sid="${esc(s.id)}" aria-label="Przesuń niżej: ${esc(s.title)}" ${dis || (i === steps.length - 1 ? "disabled" : "")}>↓</button><button type="button" class="icon-btn" data-glact="editStep" data-sid="${esc(s.id)}" aria-label="Edytuj krok: ${esc(s.title)}" ${dis}>✎</button></span></li>`).join("")}</ul>
         <form class="gl-add" id="glStepForm" novalidate><input name="title" type="text" maxlength="160" placeholder="Nowy krok" aria-label="Nowy krok" ${dis}><input name="date" type="date" aria-label="Data kroku" ${dis}><button type="submit" class="btn" ${dis}>Dodaj</button></form>
         <p class="sc-err" id="glStepErr" role="alert"></p>
         <div class="actions"><button type="button" class="btn" data-glact="edit" ${dis}>Edytuj cel</button></div>
@@ -169,17 +179,10 @@
         <label class="sc-field"><span class="k">Krok</span><input name="title" type="text" maxlength="160" value="${esc(d.title)}"></label>
         <label class="sc-field"><span class="k">Data (opcjonalnie)</span><input name="date" type="date" value="${esc(d.date || "")}"></label>`;
       del = `<button type="button" class="btn danger" data-glform="delStep">Usuń krok</button>`;
-    } else {
-      const t = TEMPLATES.find(x => x.id === d.t), preview = t.make(d.year);
-      inner = `<h2 id="glTitle">Szablon: ${esc(t.name)}</h2>
-        ${t.years ? `<div class="sc-field"><span class="k">Rok, w którym składasz aplikację (jesień)</span><div class="sc-cats">${d.years.map(y => `<button type="button" class="chip" data-glform="year" data-v="${y}" aria-pressed="${y === d.year}">${y}</button>`).join("")}</div></div>` : ""}
-        <p class="hint">${esc(preview.note)}</p>
-        <ol class="gl-prev">${preview.steps.map(([title, date]) => `<li>${esc(title)}${date ? ` <span class="meta">— ${esc(fmtLong.format(parseDay(date)))}</span>` : ""}</li>`).join("")}</ol>
-        <p class="meta">Po dodaniu możesz wszystko zmienić: kroki, daty i nazwę.</p>`;
     }
     el.innerHTML = `<div class="sc-backdrop" data-glform="close"></div><form class="panel sc-form" id="glForm" role="dialog" aria-modal="true" aria-labelledby="glTitle" novalidate>
       ${inner}<p class="sc-err" id="glErr" role="alert"></p>
-      <div class="actions"><button type="submit" class="btn primary">${sh.mode === "tpl" ? "Dodaj cel" : "Zapisz"}</button><button type="button" class="btn" data-glform="close">Anuluj</button>${del}</div></form>`;
+      <div class="actions"><button type="submit" class="btn primary">Zapisz</button><button type="button" class="btn" data-glform="close">Anuluj</button>${del}</div></form>`;
     const f = doc.querySelector('#glForm input[name="title"]'); if (f && f.focus && !sh.focused) { sh.focused = true; try { f.focus(); } catch (e) {} }
   }
   function openSheet(mode, data) { if (!canWrite()) return false; ui.sheet = { mode, data }; renderSheet(); return true; }
@@ -211,17 +214,13 @@
       closeSheet();
       return save(next, "Zapisano krok.", prev);
     }
-    const gl = fromTemplate(d.t, d.year, today());
-    next.goals.push(gl); ui.open = gl.id;
-    closeSheet();
-    return save(next, `Dodano cel z szablonu: ${gl.title} (${gl.steps.length} kroków).`, prev);
+    return closeSheet();
   }
   function onSheetClick(e) {
     const b = e.target.closest("[data-glform]"); if (!b || !ui.sheet) return;
     const a = b.dataset.glform, d = readForm();
     if (a === "close") closeSheet();
     else if (a === "area") { d.area = b.dataset.v; renderSheet(); }
-    else if (a === "year") { d.year = +b.dataset.v; renderSheet(); }
     else if (a === "delGoal") {
       const prev = exportState(), next = exportState(), gl = goalById(d.id);
       next.goals = next.goals.filter(x => x.id !== d.id); ui.open = null;
@@ -241,8 +240,14 @@
     else if (a === "back") { ui.open = null; render(); }
     else if (a === "new") openSheet("goal", { id: null, title: "", area: "szkola", deadline: "", note: "" });
     else if (a === "edit" && goal) openSheet("goal", { id: goal.id, title: goal.title, area: goal.area, deadline: goal.deadline || "", note: goal.note });
-    else if (a === "tpl") { const y = now().getFullYear(); openSheet("tpl", { t: b.dataset.t, years: [y + 1, y + 2, y + 3], year: y + 2 }); }
     else if (a === "editStep" && goal) { const s = goal.steps.find(x => x.id === b.dataset.sid); if (s) openSheet("step", { gid: goal.id, id: s.id, title: s.title, date: s.date || "" }); }
+    else if ((a === "up" || a === "down") && goal) {
+      const next = exportState(), gl = next.goals.find(x => x.id === goal.id), i = gl.steps.findIndex(x => x.id === b.dataset.sid), j = a === "up" ? i - 1 : i + 1;
+      if (i < 0 || j < 0 || j >= gl.steps.length) return;
+      [gl.steps[i], gl.steps[j]] = [gl.steps[j], gl.steps[i]];
+      save(next);
+      const again = doc.querySelector(`[data-glact="${a}"][data-sid="${b.dataset.sid}"]`); if (again && !again.disabled && again.focus) try { again.focus(); } catch (x) {}
+    }
     else if (a === "toggle" && goal) {
       const next = exportState(), gl = next.goals.find(x => x.id === goal.id), s = gl.steps.find(x => x.id === b.dataset.sid);
       if (!s) return;

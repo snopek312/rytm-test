@@ -108,6 +108,8 @@
   const fmtLong = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric" });
   const plural = (n, one, few, many) => { const a = n % 10, b = n % 100; return n === 1 ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many; };
   const say = () => (g.Rytm && g.Rytm.notify) || { info() {}, error() {} };
+  const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+  const LOCK_SVG = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>`;
 
   let R = normalizeRecord(null), P = null, now = () => new Date(), iterNew = ITER;
   let D = null, K = null;                         // decrypted data and the key, only while unlocked
@@ -148,10 +150,16 @@
   }
 
   /* ---------- screens ---------- */
+  // after unlocking: the panels come in like a newly opened view (the rings fill up)
+  function comeIn() {
+    const v = $("v-savings"); if (!v || !v.classList) return;
+    v.classList.remove("enter"); void v.offsetWidth; v.classList.add("enter");
+    setTimeout(() => v.classList.remove("enter"), 1100);
+  }
   function lockView() {
     const dis = canWrite() ? "" : "disabled", wait = Math.max(0, Math.ceil((ui.until - Date.now()) / 1000));
     if (ui.mode === "setup") {
-      return `<section class="panel sv-lock"><h2>${ui.archive ? "Nowy PIN" : "Ustaw PIN"}</h2>
+      return `<section class="panel sv-lock"><span class="sv-lockico" aria-hidden="true">${LOCK_SVG}</span><h2>${ui.archive ? "Nowy PIN" : "Ustaw PIN"}</h2>
         <p class="hint">Oszczędności będą zaszyfrowane tym PIN-em — także w kopii zapasowej. Bez PIN-u nikt ich nie odczyta, nawet aplikacja. Zapomnianego PIN-u nie da się odzyskać (reszta aplikacji działa normalnie).</p>
         <form id="svSetForm" class="sv-pinform" novalidate>
           <label class="sc-field"><span class="k">PIN (4–8 cyfr)</span><input name="pin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" ${dis}></label>
@@ -161,7 +169,7 @@
         </form>
         <p class="note">Dłuższy PIN (6–8 cyfr) jest bezpieczniejszy. PIN chroni przed kimś, kto weźmie twój telefon albo zobaczy plik kopii.</p></section>`;
     }
-    return `<section class="panel sv-lock"><h2>Oszczędzanie jest zablokowane</h2>
+    return `<section class="panel sv-lock"><span class="sv-lockico" aria-hidden="true">${LOCK_SVG}</span><h2>Oszczędzanie jest zablokowane</h2>
       <form id="svUnlockForm" class="sv-pinform" novalidate>
         <label class="sc-field"><span class="k">${ui.restore ? "Stary PIN (do poprzednich danych)" : "PIN"}</span><input name="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" ${wait ? "disabled" : ""}></label>
         <p class="sc-err" id="svErr" role="alert">${esc(wait ? `Za dużo prób. Spróbuj za ${wait} s.` : ui.msg)}</p>
@@ -173,32 +181,49 @@
       ${R.old.length && !ui.restore ? `<p class="meta">Masz odłożone poprzednie dane (${R.old.length}). <button type="button" class="btn link" data-svact="restore" ${dis}>Przywróć je starym PIN-em</button></p>` : ""}
     </section>`;
   }
+  // a sum with the cents and "zł" smaller (the text stays the same: "1 234,56 zł")
+  function big(x) {
+    let head = "", tail = "";
+    for (const p of money.formatToParts(x)) { if (p.type === "decimal" || p.type === "fraction" || p.type === "currency" || (tail && p.type === "literal")) tail += p.value; else head += p.value; }
+    return `${esc(head)}<small>${esc(tail)}</small>`;
+  }
+  const RING = 2 * Math.PI * 26;
+  const ring = (pct, done) => `<span class="sv-ringw${done ? " done" : ""}"><svg class="sv-ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="t" cx="32" cy="32" r="26"></circle><circle class="f" cx="32" cy="32" r="26" stroke-dasharray="${RING.toFixed(2)}" stroke-dashoffset="${(RING * (1 - pct / 100)).toFixed(2)}"></circle></svg><b class="sv-pct">${pct}%</b></span>`;
   function openView() {
     const T = today(), dis = canWrite() ? "" : "disabled", total = balance(D), pm = perMonth(D, T, 3);
     const monthStart = T.slice(0, 8) + "01", thisMonth = r2(D.moves.filter(m => m.date >= monthStart && m.date <= T).reduce((s, m) => s + m.amount, 0));
     const assigned = D.goals.reduce((s, x) => s + balance(D, x.id), 0);
     const goals = D.goals.map(x => {
       const saved = balance(D, x.id), pct = Math.max(0, Math.min(100, Math.round(saved / x.target * 100))), gpm = perMonth(D, T, 3, x.id);
-      const fc = forecast(x.target, saved, gpm, T), need = neededPerMonth(x.target, saved, x.deadline, T);
-      return `<li class="sv-goal"><button type="button" class="lf-row" data-svact="editGoal" data-id="${esc(x.id)}" ${dis}><span><b>${esc(x.name)}</b><small>${zl(saved)} z ${zl(x.target)}${x.deadline ? ` · do ${esc(fmtLong.format(parseDay(x.deadline)))}` : ""}</small></span><span class="sv-pct">${pct}%</span></button>
-        <div class="lf-bar"><span style="width:${pct}%"></span></div>
-        <p class="meta">${fc && fc.done ? `<b class="good">Cel osiągnięty!</b>` : fc ? `Przy obecnym tempie (${zl(gpm)}/mies.): ${esc(fmtMonth.format(parseDay(fc.date)))}` : "Wpłacaj na ten cel, żeby policzyć, kiedy go osiągniesz."}${need ? need.late ? ` · termin minął, brakuje ${zl(need.rest)}` : ` · żeby zdążyć: ${zl(need.amount)}/mies.` : ""}</p></li>`;
+      const fc = forecast(x.target, saved, gpm, T), need = neededPerMonth(x.target, saved, x.deadline, T), done = fc && fc.done;
+      return `<li class="sv-goal${done ? " done" : ""}"><button type="button" class="sv-gbtn" data-svact="editGoal" data-id="${esc(x.id)}" ${dis}>
+          ${ring(pct, done)}
+          <span class="sv-gtx"><b>${esc(x.name)}</b><small>${zl(saved)} z ${zl(x.target)}${x.deadline ? ` · do ${esc(fmtLong.format(parseDay(x.deadline)))}` : ""}</small>
+            ${done ? `<span class="sv-badge">Cel osiągnięty!</span>` : `<small class="sv-left">Brakuje ${zl(r2(x.target - saved))}</small>`}</span></button>
+        <p class="meta">${done ? "Gratulacje — możesz ustawić następny cel." : fc ? `Przy obecnym tempie (${zl(gpm)}/mies.): ${esc(fmtMonth.format(parseDay(fc.date)))}` : "Wpłacaj na ten cel, żeby policzyć, kiedy go osiągniesz."}${need ? need.late ? ` · termin minął, brakuje ${zl(need.rest)}` : ` · żeby zdążyć: ${zl(need.amount)}/mies.` : ""}</p></li>`;
     }).join("");
-    const moves = D.moves.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).slice(0, 40).map(m => {
-      const gl = D.goals.find(x => x.id === m.goal);
-      return `<li><button type="button" class="lf-row" data-svact="editMove" data-id="${esc(m.id)}" ${dis}><span class="lf-d">${esc(fmtShort.format(parseDay(m.date)))}</span><span>${esc(m.note || (m.amount > 0 ? "Wpłata" : "Wypłata"))}${gl ? `<small>${esc(gl.name)}</small>` : ""}</span><span class="sv-amt ${m.amount > 0 ? "in" : "out"}">${m.amount > 0 ? "+" : "−"}${zl(Math.abs(m.amount))}</span></button></li>`;
-    }).join("");
-    return `<section class="panel">
-        <div class="tiles lf-tiles3"><div class="tile"><span class="k">Oszczędności</span><span class="v sv-money">${zl(total)}</span></div>
-          <div class="tile"><span class="k">Ten miesiąc</span><span class="v sv-money ${thisMonth >= 0 ? "" : "bad"}">${thisMonth >= 0 ? "+" : "−"}${zl(Math.abs(thisMonth))}</span></div>
-          <div class="tile"><span class="k">Średnio / mies.</span><span class="v sv-money">${zl(pm)}</span><span class="d meta">ostatnie 3 miesiące</span></div></div>
-        <div class="actions"><button type="button" class="btn primary" data-svact="in" ${dis}>+ Wpłata</button><button type="button" class="btn" data-svact="out" ${dis}>− Wypłata</button><button type="button" class="btn" data-svact="addGoal" ${dis}>+ Cel</button>
-          <span class="sv-sp"></span><button type="button" class="btn" data-svact="lock">Zablokuj</button></div>
+    // the moves by month, the newest first, each month with its sum
+    const sorted = D.moves.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).slice(0, 60), months = [];
+    for (const m of sorted) { const k = m.date.slice(0, 7); let g0 = months[months.length - 1]; if (!g0 || g0.k !== k) months.push(g0 = { k, list: [], sum: 0 }); g0.list.push(m); g0.sum = r2(g0.sum + m.amount); }
+    const moveRow = m => { const gl = D.goals.find(x => x.id === m.goal), inn = m.amount > 0;
+      return `<li><button type="button" class="lf-row sv-move" data-svact="editMove" data-id="${esc(m.id)}" ${dis}><span class="sv-mico ${inn ? "in" : "out"}" aria-hidden="true">${inn ? "↓" : "↑"}</span><span>${esc(m.note || (inn ? "Wpłata" : "Wypłata"))}<small>${esc(fmtShort.format(parseDay(m.date)))}${gl ? ` · ${esc(gl.name)}` : ""}</small></span><span class="sv-amt ${inn ? "in" : "out"}">${inn ? "+" : "−"}${zl(Math.abs(m.amount))}</span></button></li>`; };
+    const sign = v => `${v >= 0 ? "+" : "−"}${zl(Math.abs(v))}`;
+    return `<section class="panel sv-hero">
+        <div class="sv-top"><span class="k">Oszczędności</span><button type="button" class="sv-lockb" data-svact="lock" aria-label="Zablokuj oszczędzanie">${LOCK_SVG}<span>Zablokuj</span></button></div>
+        <p class="sv-total">${big(total)}</p>
+        <div class="sv-stats"><span><small>Ten miesiąc</small><b class="${thisMonth >= 0 ? "" : "neg"}">${sign(thisMonth)}</b></span><span><small>Średnio / mies.</small><b>${zl(pm)}</b></span>${D.goals.length ? `<span><small>W celach</small><b>${zl(r2(assigned))}</b></span>` : ""}</div>
+        <svg class="sv-wave" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 22 C 50 8, 100 36, 150 22 S 250 8, 300 22 S 400 36, 450 22 L 450 40 L 0 40 Z"></path><path class="b" d="M0 28 C 60 18, 110 38, 170 28 S 280 16, 340 28 S 430 36, 470 28 L 470 40 L 0 40 Z"></path></svg>
       </section>
-      <section class="panel"><h2>Cele</h2>${goals ? `<ul class="lf-list sv-goals">${goals}</ul>${total - assigned > 0.004 ? `<p class="meta">Poza celami: ${zl(r2(total - assigned))}</p>` : ""}` : `<p class="meta">Dodaj cel, np. wyjazd albo nowy sprzęt — zobaczysz, ile brakuje i kiedy go osiągniesz.</p>`}</section>
-      ${D.moves.length > 1 ? `<section class="panel"><h2>Saldo w czasie</h2><div class="chart"><canvas id="svChart" aria-label="Wykres oszczędności w czasie"></canvas></div></section>` : ""}
-      <section class="panel"><h2>Wpłaty i wypłaty</h2>${moves ? `<ul class="lf-list">${moves}</ul>` : `<p class="meta">Nic jeszcze nie ma. Zacznij od „+ Wpłata”.</p>`}</section>
-      <section class="panel"><div class="actions"><button type="button" class="btn" data-svact="changePin" ${dis}>Zmień PIN</button></div>
+      <div class="sv-acts">
+        <button type="button" class="sv-act in" data-svact="in" ${dis}><span aria-hidden="true">＋</span>Wpłata</button>
+        <button type="button" class="sv-act out" data-svact="out" ${dis}><span aria-hidden="true">−</span>Wypłata</button>
+        <button type="button" class="sv-act goal" data-svact="addGoal" ${dis}><span aria-hidden="true">◎</span>Nowy cel</button>
+      </div>
+      <section class="panel"><h2>Cele</h2>${goals ? `<ul class="sv-goals">${goals}</ul>${total - assigned > 0.004 ? `<p class="meta">Poza celami: ${zl(r2(total - assigned))}</p>` : ""}` : `<p class="meta">Dodaj cel, np. wyjazd albo nowy sprzęt — zobaczysz, ile brakuje i kiedy go osiągniesz.</p>`}</section>
+      ${D.moves.length > 1 ? `<section class="panel"><h2>Saldo w czasie</h2><div class="chart sv-chart"><canvas id="svChart" aria-label="Wykres oszczędności w czasie"></canvas></div></section>` : ""}
+      <section class="panel"><h2>Wpłaty i wypłaty</h2>${months.length ? months.map(g0 => `<div class="sv-month"><p class="sv-mh"><span>${esc(cap(fmtMonth.format(parseDay(g0.k + "-01"))))}</span><span class="sv-amt ${g0.sum >= 0 ? "in" : "out"}">${sign(g0.sum)}</span></p><ul class="lf-list">${g0.list.map(moveRow).join("")}</ul></div>`).join("")
+        : `<p class="meta">Nic jeszcze nie ma. Zacznij od „Wpłata”.</p>`}</section>
+      <section class="panel sv-foot"><div class="actions"><button type="button" class="btn" data-svact="changePin" ${dis}>Zmień PIN</button></div>
         <p class="note">Dane są zaszyfrowane twoim PIN-em, także w kopii zapasowej. Zakładka blokuje się sama, gdy z niej wyjdziesz.</p></section>`;
   }
   function render() {
@@ -212,7 +237,10 @@
     const css = n => getComputedStyle(doc.documentElement).getPropertyValue(n).trim();
     const s = series(D);
     try {
-      chart = new g.Chart(c, { type: "line", data: { labels: s.map(p => fmtShort.format(parseDay(p.date))), datasets: [{ data: s.map(p => p.balance), borderColor: css("--accent"), backgroundColor: css("--accent"), borderWidth: 2, pointRadius: 2, tension: 0, stepped: true }] },
+      const ctx = c.getContext && c.getContext("2d"), acc = css("--accent") || "#0a7f95";
+      let fill = acc + "33";
+      try { const gr = ctx.createLinearGradient(0, 0, 0, c.clientHeight || 220); gr.addColorStop(0, acc + "55"); gr.addColorStop(1, acc + "05"); fill = gr; } catch (e) {}
+      chart = new g.Chart(c, { type: "line", data: { labels: s.map(p => fmtShort.format(parseDay(p.date))), datasets: [{ data: s.map(p => p.balance), borderColor: acc, backgroundColor: fill, fill: "origin", borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0, stepped: true }] },
         options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: x => zl(x.parsed.y) } } },
           scales: { y: { beginAtZero: true, ticks: { color: css("--muted"), callback: v => zl(v) }, grid: { color: css("--line") } }, x: { ticks: { color: css("--muted"), maxTicksLimit: 6 }, grid: { display: false } } } } });
     } catch (e) {}
@@ -337,7 +365,7 @@
       try {
         const u = await unlockBox(R.box, pin);
         D = u.data; K = { key: u.key, salt: u.salt, iter: u.iter };
-        ui.busy = false; ui.wrong = 0; ui.forgot = false; render();
+        ui.busy = false; ui.wrong = 0; ui.forgot = false; render(); comeIn();
         return true;
       } catch (e) { /* wrong PIN */ }
     }

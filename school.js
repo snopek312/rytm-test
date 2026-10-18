@@ -17,7 +17,7 @@
   const EXTENDED = ["Matematyka", "Fizyka", "Informatyka"];
   // the kinds as in the school's e-register (praca klasowa 8 is the heaviest); "inne" must stay last (the fallback)
   const CATS = [{ id: "pk", name: "Praca klasowa", w: 8 }, { id: "spr", name: "Sprawdzian", w: 5 }, { id: "kart", name: "Kartkówka", w: 3 },
-    { id: "odp", name: "Odpowiedź", w: 2 }, { id: "lek", name: "Praca na lekcji", w: 2 }, { id: "proj", name: "Projekt", w: 3 },
+    { id: "odp", name: "Odpowiedź", w: 2 }, { id: "lek", name: "Praca na lekcji", w: 2 }, { id: "prez", name: "Prezentacja", w: 3 }, { id: "proj", name: "Projekt", w: 3 },
     { id: "dom", name: "Praca domowa", w: 1 }, { id: "akt", name: "Aktywność", w: 1 }, { id: "inne", name: "Inne", w: 1 }];
   const GRADE_NAMES = ["", "niedostateczny", "dopuszczający", "dostateczny", "dobry", "bardzo dobry", "celujący"];
   const RETAKE = ["replace", "both", "max"];
@@ -59,11 +59,13 @@
         flag: x.flag === "ok" || x.flag === "zle" ? x.flag : null, plan: num(x.plan, 0, 100) == null ? null : r1(x.plan), retake: num(x.retake, 0, 100) == null ? null : r1(x.retake) }));
     const tids = new Set();
     const tests = (Array.isArray(o.tests) ? o.tests : []).filter(t => t && typeof t.id === "string" && !tids.has(t.id) && ids.has(t.sid) && DAY.test(t.date || "") && tids.add(t.id))
-      .map(t => ({ id: t.id, sid: t.sid, date: t.date, cat: CATS.some(c => c.id === t.cat) ? t.cat : "spr", w: intIn(t.w, 1, 10) || 1, topic: str(t.topic, 200), gid: typeof t.gid === "string" && gids.has(t.gid) ? t.gid : null }));
+      .map(t => ({ id: t.id, sid: t.sid, date: t.date, cat: CATS.some(c => c.id === t.cat) ? t.cat : "spr", w: intIn(t.w, 1, 10) || 1, topic: str(t.topic, 200), gid: typeof t.gid === "string" && gids.has(t.gid) ? t.gid : null, retake: t.retake === true }));
     return { v: 1, subjects, grades, tests, settings };
   }
 
   // percent -> grade 1..6 by the school's limits
+  // 0 none, 1 the pasek (≥ 4,75 by default), 2 ≥ 5,0, 3 ≥ 5,2
+  const avgTier = (avg, pasek = DEFAULT_SETTINGS.pasek) => (avg == null ? 0 : avg >= 5.2 ? 3 : avg >= 5 ? 2 : avg >= pasek ? 1 : 0);
   function gradeOf(pct, th = DEFAULT_SETTINGS.th) {
     if (pct == null) return null;
     let gr = 1; for (let i = 0; i < th.length; i++) if (pct >= th[i]) gr = i + 2;
@@ -138,7 +140,7 @@
     const dates = [...new Set(state.grades.filter(x => inRange(x.date, R)).map(x => x.date))].sort();
     return dates.map(d => ({ date: d, avg: overview(state, { start: R.start, end: d }).avg }));
   }
-  const core = { SUBJECTS, EXTENDED, CATS, GRADE_NAMES, DEFAULT_SETTINGS, defaults, normalize, gradeOf, lowerLimit, schoolYearOf, yearRange, range, termOf, inRange,
+  const core = { SUBJECTS, EXTENDED, CATS, GRADE_NAMES, DEFAULT_SETTINGS, defaults, normalize, avgTier, gradeOf, lowerLimit, schoolYearOf, yearRange, range, termOf, inRange,
     parts, stats, required, gradesNeeded, subjectGrades, overview, ranking, trend, slug, dayKey, parseDay, addDays, daysBetween, r1, r2, newId };
 
   /* ================= view ================= */
@@ -160,6 +162,7 @@
   const when = n => (n === 0 ? "dziś" : n === 1 ? "jutro" : n === 2 ? "pojutrze" : n > 0 ? `za ${n} ${plural(n, "dzień", "dni", "dni")}` : n === -1 ? "wczoraj" : `${-n} ${plural(-n, "dzień", "dni", "dni")} temu`);
 
   let S = defaults(), P = null, now = () => new Date();
+  const tierSeen = {};
   const ui = { tab: "przedmioty", term: null, y0: null, sid: null, gid: null, sheet: null, chartSid: null, anFilter: "all", setOpen: false };
   let charts = [];
   const today = () => dayKey(now());
@@ -177,14 +180,16 @@
   function exportState() { return JSON.parse(JSON.stringify(S)); }
   // the whole school record is written at once; the screen shows the change now, the message comes only after the
   // store confirmed the save; if writing is off, the screen goes back to what is stored
+  // other screens that show school data (the calendar, Nauka) are told after every change, also after "Cofnij"
+  const changed = () => { if (P && P.onChange) try { P.onChange(); } catch (e) {} };
   function save(next, okText, undoTo) {
     if (!P || !P.save) return false;
     const prev = S;
     S = normalize(next);
     let res;
     try { res = { ok: true, saved: P.save(exportState()) }; }
-    catch (e) { S = normalize(P.load ? P.load() : prev); render(); return false; }
-    render();
+    catch (e) { S = normalize(P.load ? P.load() : prev); render(); changed(); return false; }
+    render(); changed();
     if (okText && P.whenSaved) P.whenSaved(res, () => say().info(okText, undoTo ? { action: { label: "Cofnij", fn: () => save(undoTo, "Cofnięto.") } } : undefined));
     return true;
   }
@@ -249,7 +254,10 @@
     const next = S.tests.filter(t => !t.gid && t.date >= T).sort((a, b) => (a.date < b.date ? -1 : 1))[0];
     const best = O.rows.filter(r => r.st.avg != null).sort((a, b) => b.st.avg - a.st.avg)[0];
     const pasekGap = O.avg == null ? null : S.settings.pasek - O.avg;
-    const head = `<section class="panel sc-head" aria-label="Podsumowanie">
+    const tier = avgTier(O.avg, S.settings.pasek), tkey = `${ui.y0}|${ui.term}`, rose = tierSeen[tkey] != null && tier > tierSeen[tkey];
+    tierSeen[tkey] = tier;
+    const head = `<section class="panel sc-head tier-${tier}${rose ? " celebrate" : ""}" aria-label="Podsumowanie">
+        ${tier ? `<span class="sc-tier">${["", "Pasek", "Średnia 5,0+", "Średnia 5,2+"][tier]}</span>` : ""}
         <div class="sc-big"><span class="sc-avg ${O.avg == null ? "" : gcls(Math.round(O.avg))}">${O.avg == null ? "–" : f2(O.avg)}</span>
           <span class="sc-of"><strong>Średnia ocen końcowych</strong><br>przewidywana z ${O.counted} ${plural(O.counted, "przedmiotu", "przedmiotów", "przedmiotów")}
           <br>${O.avg == null ? "" : O.pasek ? `<span class="sc-pasek ok">Pasek na świadectwie ✓</span>` : `<span class="sc-pasek">Do paska (${f2(S.settings.pasek)}) brakuje ${f2(pasekGap)}</span>`}</span></div>
@@ -381,14 +389,15 @@
       const target = s.target || (st.grade ? Math.min(6, st.grade + 1) : 5), rq = required(st, target, t.w, S.settings);
       return `<li class="sc-test${d < 0 ? " past" : d <= 2 ? " soon" : ""}">
         <span class="sc-when"><b>${esc(fmtShort.format(parseDay(t.date)))}</b><small>${when(d)}</small></span>
-        <span class="sc-tinfo"><b>${esc(s.name)}</b> · ${esc(catName(t.cat))} (waga ${t.w})${t.topic ? `<br>${esc(t.topic)}` : ""}
+        <span class="sc-tinfo"><b>${esc(s.name)}</b>${t.retake ? ` <span class="sc-retk">(poprawa)</span>` : ""} · ${esc(catName(t.cat))} (waga ${t.w})${t.topic ? `<br>${esc(t.topic)}` : ""}
           <br><span class="meta">na ${target}: ${rq.free ? `${target} już masz` : rq.possible ? `potrzebujesz co najmniej ${pctTxt(Math.ceil(rq.pct * 10) / 10)}` : (n => n ? `jeden wynik nie wystarczy (potrzeba ${n} takich na 100%)` : "jeden wynik nie wystarczy")(gradesNeeded(st, target, t.w, S.settings))}</span></span>
         <span class="sc-tbtns">${d <= 0 ? `<button type="button" class="btn primary" data-scact="result" data-tid="${t.id}" ${dis}>Wpisz wynik</button>` : ""}<button type="button" class="btn" data-scact="editTest" data-tid="${t.id}" ${dis}>Edytuj</button></span></li>`;
     };
     return `<section class="panel"><div class="row"><h2>Zapowiedziane</h2><button type="button" class="btn primary" data-scact="addTest" ${dis}>+ Zapowiedz</button></div>
         ${up.length ? `<ul class="sc-tests">${up.map(row).join("")}</ul>` : `<p class="meta">Nic nie jest zapowiedziane. Dodaj sprawdzian albo kartkówkę — zobaczysz, ile musisz dostać na wybraną ocenę.</p>`}</section>
       ${done.length ? `<section class="panel"><h2>Ostatnio wpisane</h2><ul class="sc-done">${done.map(t => { const x = gradeById(t.gid), gr = gradeOf(x.pct, S.settings.th);
-        return `<li><span class="sc-dot ${gcls(gr)}">${gr}</span> <b>${esc(sub(t.sid).name)}</b> · ${esc(catName(t.cat))} ${esc(fmtShort.format(parseDay(t.date)))} · ${pctTxt(x.pct)}${t.topic ? ` · ${esc(t.topic)}` : ""}</li>`; }).join("")}</ul></section>` : ""}`;
+        const shown = t.retake && x.retake != null ? x.retake : x.pct, g2 = gradeOf(shown, S.settings.th);
+        return `<li><span class="sc-dot ${gcls(g2)}">${g2}</span> <b>${esc(sub(t.sid).name)}</b>${t.retake ? " (poprawa)" : ""} · ${esc(catName(t.cat))} ${esc(fmtShort.format(parseDay(t.date)))} · ${pctTxt(shown)}${t.topic ? ` · ${esc(t.topic)}` : ""}</li>`; }).join("")}</ul></section>` : ""}`;
   }
 
   function settingsView() {
@@ -429,17 +438,24 @@
         <div class="sc-field"><span class="k">Waga</span><div class="sc-ws">${wChips}</div></div>
         <label class="sc-field"><span class="k">Opis</span><input name="desc" type="text" maxlength="200" placeholder="np. Funkcja kwadratowa" value="${esc(d.desc)}"></label>
         <label class="sc-field"><span class="k">Data</span><input name="date" type="date" value="${esc(d.date)}" max="${esc(today())}"></label>`;
+    } else if (sh.mode === "retakePick") {
+      const t = S.tests.find(y => y.id === d.tid), list = S.grades.filter(g => g.sid === d.sid).sort((a, b) => (a.date < b.date ? 1 : -1));
+      inner = `<h2 id="scSheetTitle">Wynik poprawy</h2><p class="meta">${esc(sub(d.sid).name)} · ${esc(catName(t ? t.cat : "spr"))}${t && t.topic ? ` · ${esc(t.topic)}` : ""}</p>
+        <label class="sc-field"><span class="k">Którą ocenę poprawiasz?</span><select name="gid">${list.map(g => `<option value="${g.id}"${g.id === d.gid ? " selected" : ""}>${esc(catName(g.cat))} ${esc(fmtShort.format(parseDay(g.date)))} · ${pctTxt(g.pct)} → ${gradeOf(g.pct, S.settings.th)}${g.desc ? ` · ${esc(g.desc)}` : ""}</option>`).join("")}</select></label>
+        <div class="sc-field"><span class="k">Wynik poprawy</span><span class="sc-pctrow"><input name="pct" type="text" inputmode="decimal" autocomplete="off" placeholder="np. 85" value="${esc(d.pct)}" aria-label="Wynik poprawy w procentach"><span>%</span></span></div>
+        <p class="meta">Teraz: ${RETAKE_NAME[S.settings.retake]} (zmienisz w ustawieniach).</p>`;
     } else if (sh.mode === "retake") {
       const x = gradeById(d.gid);
       inner = `<h2 id="scSheetTitle">Poprawa</h2><p class="meta">${esc(sub(x.sid).name)} · ${esc(catName(x.cat))} · ${pctTxt(x.pct)} → ${gradeOf(x.pct, S.settings.th)}. Teraz: ${RETAKE_NAME[S.settings.retake]} (zmienisz w ustawieniach).</p>
         <div class="sc-field"><span class="k">Wynik poprawy</span><span class="sc-pctrow"><input name="pct" type="text" inputmode="decimal" autocomplete="off" placeholder="np. 85" value="${esc(d.pct)}" aria-label="Wynik poprawy w procentach"><span>%</span></span></div>`;
     } else {
-      inner = `<h2 id="scSheetTitle">${d.id ? "Edytuj zapowiedź" : "Zapowiedz sprawdzian"}</h2>
+      inner = `<h2 id="scSheetTitle">${d.id ? "Edytuj zapowiedź" : "Zapowiedz test"}</h2>
         <label class="sc-field"><span class="k">Przedmiot</span><select name="sid">${subjOpts}</select></label>
         <label class="sc-field"><span class="k">Kiedy</span><input name="date" type="date" value="${esc(d.date)}"></label>
         <div class="sc-field"><span class="k">Rodzaj</span><div class="sc-cats">${catChips}</div></div>
         <div class="sc-field"><span class="k">Waga</span><div class="sc-ws">${wChips}</div></div>
-        <label class="sc-field"><span class="k">Temat</span><input name="topic" type="text" maxlength="200" placeholder="np. Dział 2: kinematyka" value="${esc(d.topic)}"></label>`;
+        <label class="sc-field"><span class="k">Temat</span><input name="topic" type="text" maxlength="200" placeholder="np. Dział 2: kinematyka" value="${esc(d.topic)}"></label>
+        <div class="sc-field"><span class="k">Poprawa?</span><div class="sc-cats"><button type="button" class="chip" data-scform="retakeFlag" aria-pressed="${!!d.retake}">To poprawa</button></div></div>`;
     }
     const del = sh.mode === "grade" && d.id ? `<button type="button" class="btn danger" data-scform="delGrade">Usuń ocenę</button>`
       : sh.mode === "retake" && gradeById(d.gid).retake != null ? `<button type="button" class="btn danger" data-scform="delRetake">Usuń poprawę</button>`
@@ -457,6 +473,7 @@
     if (f.querySelector('[name="desc"]')) d.desc = val("desc");
     if (f.querySelector('[name="date"]')) d.date = val("date");
     if (f.querySelector('[name="topic"]')) d.topic = val("topic");
+    if (f.querySelector('select[name="gid"]')) d.gid = val("gid");
     return d;
   }
   const parsePct = v => { const n = Number(String(v == null ? "" : v).trim().replace(",", ".").replace("%", "")); return String(v).trim() !== "" && isFinite(n) && n >= 0 && n <= 100 ? r1(n) : null; };
@@ -476,6 +493,14 @@
       const prev = exportState(); closeSheet();
       if (!old) { ui.gid = rec.id; if (!inRange(rec.date, curRange())) { ui.y0 = schoolYearOf(rec.date); ui.term = termOf(rec.date, S.settings.semEnd); } }
       save(next, `${old ? "Zapisano zmiany" : "Dodano ocenę"}: ${sub(rec.sid).name} — ${pctTxt(pct)} → ${gradeOf(pct, S.settings.th)}.`, prev);
+    } else if (sh.mode === "retakePick") {
+      const pct = parsePct(d.pct);
+      if (pct == null) return err("Wpisz wynik poprawy od 0 do 100%.");
+      const x = next.grades.find(y => y.id === d.gid); if (!x) return err("Wybierz ocenę, którą poprawiasz.");
+      x.retake = pct;
+      const t = next.tests.find(y => y.id === d.tid); if (t) t.gid = x.id;
+      const prev = exportState(); closeSheet();
+      save(next, `Zapisano poprawę: ${sub(x.sid).name} — ${pctTxt(pct)} → ${gradeOf(pct, S.settings.th)}.`, prev);
     } else if (sh.mode === "retake") {
       const pct = parsePct(d.pct);
       if (pct == null) return err("Wpisz wynik poprawy od 0 do 100%.");
@@ -485,11 +510,11 @@
     } else {
       if (!DAY.test(d.date || "")) return err("Wybierz datę.");
       if (!sub(d.sid)) return err("Wybierz przedmiot.");
-      const rec = { id: d.id || newId("t"), sid: d.sid, date: d.date, cat: d.cat, w: d.w, topic: (d.topic || "").trim(), gid: null };
+      const rec = { id: d.id || newId("t"), sid: d.sid, date: d.date, cat: d.cat, w: d.w, topic: (d.topic || "").trim(), gid: null, retake: !!d.retake };
       const old = d.id && next.tests.find(t => t.id === d.id);
-      if (old) Object.assign(old, { sid: rec.sid, date: rec.date, cat: rec.cat, w: rec.w, topic: rec.topic }); else next.tests.push(rec);
+      if (old) Object.assign(old, { sid: rec.sid, date: rec.date, cat: rec.cat, w: rec.w, topic: rec.topic, retake: rec.retake }); else next.tests.push(rec);
       const prev = exportState(); closeSheet();
-      save(next, `${old ? "Zapisano zmiany" : "Zapowiedziano"}: ${sub(rec.sid).name} — ${catName(rec.cat).toLowerCase()} ${when(daysBetween(today(), rec.date))}.`, prev);
+      save(next, `${old ? "Zapisano zmiany" : "Zapowiedziano"}: ${sub(rec.sid).name}${rec.retake ? " (poprawa)" : ""} — ${catName(rec.cat).toLowerCase()} ${when(daysBetween(today(), rec.date))}.`, prev);
     }
   }
   function onSheetClick(e) {
@@ -498,6 +523,7 @@
     if (a === "close") closeSheet();
     else if (a === "cat") { d.cat = b.dataset.c; d.w = S.settings.catW[d.cat] || d.w; renderSheet(); }
     else if (a === "w") { d.w = +b.dataset.n; renderSheet(); }
+    else if (a === "retakeFlag") { d.retake = !d.retake; renderSheet(); }
     else if (a === "delGrade") {
       const prev = exportState(), next = exportState(), x = next.grades.find(y => y.id === d.id);
       next.grades = next.grades.filter(y => y.id !== d.id); next.tests.forEach(t => { if (t.gid === d.id) t.gid = null; });
@@ -544,8 +570,14 @@
     else if (a === "anf") { ui.anFilter = b.dataset.f; render(); }
     else if (a === "target") { const prev = exportState(), next = exportState(), s = next.subjects.find(x => x.id === ui.sid); s.target = +b.dataset.n; save(next, null, prev); }
     else if (a === "addTest") openSheet("test", { id: null, sid: ui.sid || S.subjects[0].id, date: addDays(today(), 7), cat: "spr", w: S.settings.catW.spr, topic: "" });
-    else if (a === "editTest") { const t = S.tests.find(x => x.id === b.dataset.tid); openSheet("test", { id: t.id, sid: t.sid, date: t.date, cat: t.cat, w: t.w, topic: t.topic }); }
-    else if (a === "result") { const t = S.tests.find(x => x.id === b.dataset.tid); openSheet("grade", newGradeData(t.sid, { cat: t.cat, w: t.w, desc: t.topic, date: t.date <= today() ? t.date : today(), tid: t.id })); }
+    else if (a === "editTest") { const t = S.tests.find(x => x.id === b.dataset.tid); openSheet("test", { id: t.id, sid: t.sid, date: t.date, cat: t.cat, w: t.w, topic: t.topic, retake: t.retake }); }
+    else if (a === "result") {
+      const t = S.tests.find(x => x.id === b.dataset.tid);
+      // a retake: which grade it improves (the latest one of the same kind is picked first); otherwise a new grade
+      const own = S.grades.filter(g => g.sid === t.sid).sort((a2, b2) => (a2.date < b2.date ? 1 : -1));
+      if (t.retake && own.length) openSheet("retakePick", { tid: t.id, sid: t.sid, gid: (own.find(g => g.cat === t.cat && g.retake == null) || own[0]).id, pct: "" });
+      else openSheet("grade", newGradeData(t.sid, { cat: t.cat, w: t.w, desc: t.topic, date: t.date <= today() ? t.date : today(), tid: t.id }));
+    }
     else if (a === "rule") { ui.setOpen = true; const prev = exportState(), next = exportState(); next.settings.retake = b.dataset.r; save(next, `Poprawa: ${RETAKE_NAME[b.dataset.r]}.`, prev); }
     else if (a === "ext" || a === "counts") { ui.setOpen = true; const prev = exportState(), next = exportState(), s = next.subjects.find(x => x.id === b.dataset.sid); s[a] = !s[a]; save(next, null, prev); }
     else if (a === "delSub") { ui.setOpen = true; const prev = exportState(), next = exportState(), s = next.subjects.find(x => x.id === b.dataset.sid); next.subjects = next.subjects.filter(x => x.id !== s.id); next.tests = next.tests.filter(t => t.sid !== s.id); save(next, `Usunięto przedmiot: ${s.name}.`, prev); }
@@ -661,10 +693,24 @@
       doc.addEventListener("keydown", e => { if (e.key === "Escape" && ui.sheet) closeSheet(); });
     }
   }
+  // the calendar (Dziś) adds and changes announced tests through these: the same list as "Sprawdziany"
+  function saveTest(t) {
+    if (!canWrite() || !t || !sub(t.sid) || !DAY.test(t.date || "")) return false;
+    const prev = exportState(), next = exportState(), cat = CATS.some(c => c.id === t.cat) ? t.cat : "spr";
+    const old = t.id && next.tests.find(x => x.id === t.id);
+    const rec = { id: (old && old.id) || newId("t"), sid: t.sid, date: t.date, cat, w: old && old.cat === cat ? old.w : S.settings.catW[cat], topic: str(t.topic, 200), gid: old ? old.gid : null, retake: t.retake === true };
+    if (old) Object.assign(old, rec); else next.tests.push(rec);
+    return save(next, `${old ? "Zapisano" : "Dodano test"}: ${catName(cat)} — ${sub(t.sid).name}${rec.retake ? " (poprawa)" : ""}, ${fmtShort.format(parseDay(t.date))}.`, prev);
+  }
+  function deleteTest(id) {
+    const t = S.tests.find(x => x.id === id); if (!t || !canWrite()) return false;
+    const prev = exportState(), next = exportState(); next.tests = next.tests.filter(x => x.id !== id);
+    return save(next, `Usunięto test: ${catName(t.cat)} — ${sub(t.sid) ? sub(t.sid).name : ""}.`, prev);
+  }
   // tests only: a fixed "now"
   function setClock(fn) { now = fn || (() => new Date()); ui.y0 = null; ui.term = null; }
 
-  const api = Object.assign({}, core, { attach, render, mount, exportState, setClock, showTab, ui });
+  const api = Object.assign({}, core, { attach, render, mount, exportState, setClock, showTab, ui, saveTest, deleteTest, canWrite });
   Object.defineProperty(api, "state", { get: exportState, enumerable: true });
   g.RytmSchool = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
