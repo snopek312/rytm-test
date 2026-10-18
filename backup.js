@@ -8,14 +8,16 @@
 //     school: {v:1, subjects:[...], grades:[{id,sid,pct,w,cat,desc,date,...}], tests:[...], settings:{...}}   // optional, 16.10.2026;
 //     manualRecords: {v:1, entries:[{id,pool,stroke,dist,time,date,kind,note,fix,fixTime}]}   // optional, 17.10.2026;
 //     plan: {v:1, bells, lessons, events, cats}, goals: {v:1, seeded, goals}, portfolio: {v:1, activities, awards},
-//     study: {v:1, maturaDate, subjects, tests}, savings: {v:1, box, old}  (savings: encrypted with the user's PIN)   // optional, 17.10.2026;
+//     study: {v:1, maturaDate, subjects, tests, current}, savings: {v:1, box, old}  (savings: encrypted with the user's PIN)   // optional, 17.10.2026;
+//     homework: {v:1, items:[{id,sid,text,due,done,doneAt,added}]}, sleep: {v:1, bed, hours, nights:[{date,bed,wake}]},
+//     birthdays: {v:1, people:[{id,name,day,month,year,note,ideas:[{id,text,got}]}]}   // optional, 18.10.2026;
 //   } }                                                                  // older versions ignore it, so it stays format 1
 (function (g) {
   "use strict";
   const FORMAT = 1;
   const HABIT_TYPES = ["count", "bool", "amount", "time"];
   const DAY = /^\d{4}-\d{2}-\d{2}$/;
-  const PARTS = ["plan", "goals", "portfolio", "study", "savings"];
+  const PARTS = ["plan", "goals", "portfolio", "study", "savings", "homework", "sleep", "birthdays"];
   const isObj = v => v !== null && typeof v === "object" && !Array.isArray(v);
 
   // FNV-1a over the UTF-16 code units: detects a cut-off or hand-edited file (not a security measure)
@@ -43,6 +45,9 @@
       schoolGrades: ((data.school && data.school.grades) || []).length,
       manualRecords: ((data.manualRecords && data.manualRecords.entries) || []).length,
       planEvents: ((data.plan && data.plan.events) || []).length,
+      homework: ((data.homework && data.homework.items) || []).length,
+      sleepNights: ((data.sleep && data.sleep.nights) || []).length,
+      birthdays: ((data.birthdays && data.birthdays.people) || []).length,
       goals: ((data.goals && data.goals.goals) || []).length,
       portfolio: ((data.portfolio && data.portfolio.activities) || []).length + ((data.portfolio && data.portfolio.awards) || []).length,
       studyTopics: ((data.study && data.study.subjects) || []).reduce((a, s) => a + ((s && s.topics) || []).filter(t => t && t.st > 0).length, 0)
@@ -161,12 +166,15 @@
       else if (!mr.entries.every(x => isObj(x) && typeof x.id === "string" && typeof x.time === "number" && x.time > 0 && typeof x.dist === "number" && typeof x.stroke === "string" && DAY.test(x.date || "")))
         errors.push("Lista wyników wpisanych ręcznie ma zły format.");
     }
-    // the parts added on 17.10.2026 (optional): the shape only; each module cleans the details when it loads them
+    // the parts added on 17–18.10.2026 (optional): the shape only; each module cleans the details when it loads them
     const part = (k, name, ok) => { const v = d[k]; if (v !== undefined && v !== null && !(isObj(v) && ok(v))) errors.push(`Część „${name}” ma zły format.`); };
     const box = b => isObj(b) && typeof b.salt === "string" && typeof b.iv === "string" && typeof b.ct === "string" && Number.isInteger(b.iter);
     part("plan", "kalendarz i plan lekcji", v => Array.isArray(v.events) && (v.lessons === undefined || isObj(v.lessons)) && (v.bells === undefined || Array.isArray(v.bells)) && (v.cats === undefined || Array.isArray(v.cats)));
     part("goals", "cele", v => Array.isArray(v.goals) && v.goals.every(x => isObj(x) && typeof x.id === "string" && typeof x.title === "string" && Array.isArray(x.steps)));
     part("portfolio", "portfolio", v => Array.isArray(v.activities) && Array.isArray(v.awards));
+    part("homework", "zadania domowe", v => Array.isArray(v.items) && v.items.every(x => isObj(x) && typeof x.id === "string" && typeof x.text === "string"));
+    part("sleep", "sen", v => Array.isArray(v.nights) && v.nights.every(isObj));
+    part("birthdays", "urodziny", v => Array.isArray(v.people) && v.people.every(x => isObj(x) && typeof x.id === "string" && typeof x.name === "string"));
     part("study", "nauka", v => Array.isArray(v.subjects) && Array.isArray(v.tests) && (v.current === undefined || (isObj(v.current) && (v.current.topics === undefined || Array.isArray(v.current.topics)) && (v.current.sessions === undefined || Array.isArray(v.current.sessions)))));
     part("savings", "oszczędzanie", v => (v.box === null || box(v.box)) && Array.isArray(v.old) && v.old.every(box));
     const uniq = [...new Set(errors)];
@@ -191,6 +199,9 @@
     lost("goals", "Cele");
     lost("portfolio", "Portfolio (aktywności i osiągnięcia)");
     lost("studyTopics", "Tematy w nauce (z postępem)");
+    lost("homework", "Zadania domowe");
+    lost("sleepNights", "Zapisane noce (sen)");
+    lost("birthdays", "Urodziny");
     if ((current.savings || 0) > (incoming.savings || 0)) out.push("Oszczędzanie: na urządzeniu są zaszyfrowane dane, a w kopii ich nie ma.");
     if (current.lastDay && incoming.lastDay && incoming.lastDay < current.lastDay)
       out.push(`Najnowsze dane w kopii są z ${incoming.lastDay}, a na urządzeniu z ${current.lastDay}.`);

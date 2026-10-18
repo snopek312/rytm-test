@@ -14,9 +14,9 @@
   // colours = theme tokens, so they also work in the dark theme
   const COLORS = [["accent", "morski"], ["h0", "niebieski"], ["h5", "fioletowy"], ["h4", "różowy"], ["bad", "czerwony"], ["h1", "pomarańczowy"],
     ["h3", "bursztynowy"], ["rope", "złoty"], ["good", "zielony"], ["h2", "miętowy"], ["muted", "szary"]].map(([k, name]) => ({ k, name }));
-  // the categories of what is added by itself (from Szkoła, Frekwencja, Cele): the colour and the legend can change, they cannot be deleted
-  const BUILTIN = [{ id: "test", name: "Testy", color: "h0" }, { id: "zaw", name: "Zawody", color: "rope" }, { id: "cel", name: "Kroki celów", color: "h5" }];
-  const DEFAULT_CATS = [{ id: "szkola", name: "Szkoła", color: "h1" }, { id: "sport", name: "Sport", color: "h2" }, { id: "wymiana", name: "Wymiana", color: "h4" },
+  // the categories of what is added by itself (from Szkoła, Frekwencja, Cele, Urodziny): the colour and the legend can change, they cannot be deleted
+  const BUILTIN = [{ id: "test", name: "Testy", color: "h0" }, { id: "zaw", name: "Zawody", color: "rope" }, { id: "cel", name: "Kroki celów", color: "h5" }, { id: "ur", name: "Urodziny", color: "h4" }];
+  const DEFAULT_CATS = [{ id: "szkola", name: "Szkoła", color: "h1" }, { id: "sport", name: "Sport", color: "h2" }, { id: "wymiana", name: "Wymiana", color: "h3" },
     { id: "rodzina", name: "Rodzina i znajomi", color: "bad" }, { id: "inne", name: "Inne", color: "accent" }];
   // the kinds of tests that can be added from the calendar (ids of Szkoła's categories)
   const TEST_KINDS = ["pk", "spr", "kart", "odp", "prez", "proj", "inne"];
@@ -24,7 +24,7 @@
     ["13:35", "14:20"], ["14:25", "15:10"], ["15:15", "16:00"], ["16:05", "16:50"]];
   const MAXN = BELLS.length - 1;
   const EXTRA_SUBJECTS = ["Religia", "Etyka", "Godzina z wychowawcą", "Zajęcia dodatkowe", "Okienko"];
-  const KIND_ORDER = ["zawody", "test", "cel", "wydarzenie"];
+  const KIND_ORDER = ["zawody", "urodziny", "test", "cel", "wydarzenie"];
   const CODE_DOW = ["PN", "WT", "SR", "CZ", "PT", "SO", "ND"];
   const DOW_OF = { PN: 1, PON: 1, WT: 2, SR: 3, "ŚR": 3, CZ: 4, CZW: 4, PT: 5, SO: 6, SB: 6, ND: 7, NDZ: 7 };
   const DOW = ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"];
@@ -81,10 +81,11 @@
   function nowLesson(list, hm) { return { current: list.find(l => l.from <= hm && hm < l.to) || null, next: list.find(l => l.from > hm) || null }; }
 
   // everything on day k except the lessons, in a fixed order (timed events first, by their time)
-  // src: {school:{tests, subjects}, schoolCats, attendance:{cancelled}, goalsDue(from, to)}
+  // src: {school:{tests, subjects}, schoolCats, attendance:{cancelled}, goalsDue(from, to), birthdaysOn(k)}
   function agenda(state, src, k) {
     const out = [], s = src || {}, att = s.attendance;
     if (att && has(att.cancelled, k) && att.cancelled[k] === "Zawody") out.push({ kind: "zawody", title: "Zawody", cat: "zaw" });
+    for (const x of (s.birthdaysOn ? s.birthdaysOn(k) : [])) out.push({ kind: "urodziny", title: x.p.name, sub: x.age != null ? `kończy ${x.age}` : "", cat: "ur", bid: x.p.id });
     const sc = s.school, subj = id => ((sc && sc.subjects) || []).find(x => x.id === id), kindName = id => ((s.schoolCats || []).find(c => c.id === id) || { name: "Test" }).name;
     for (const t of (sc && sc.tests) || []) if (t.date === k)
       out.push({ kind: "test", title: `${subj(t.sid) ? subj(t.sid).name : "?"}${t.retake ? " (poprawa)" : ""}`, sub: t.topic || "", tag: kindName(t.cat).toLowerCase(), cat: "test", tid: t.id, done: !!t.gid });
@@ -192,13 +193,14 @@
 
   const item = i => {
     const c = catOf(S, i.cat);
-    const tag = i.kind === "test" ? i.tag : i.kind === "zawody" ? "zawody" : i.kind === "cel" ? "krok celu" : c.name.toLowerCase();
+    const tag = i.kind === "test" ? i.tag : i.kind === "zawody" ? "zawody" : i.kind === "urodziny" ? "urodziny" : i.kind === "cel" ? "krok celu" : c.name.toLowerCase();
     const inner = `${dot(c.color, i.late ? "late" : "")}<span class="pl-it">${i.time ? `<b class="pl-time">${esc(i.time)}</b> ` : ""}${esc(i.title)}${i.done ? " ✓" : ""}${i.sub ? `<small>${esc(i.sub)}</small>` : ""}</span><span class="pl-k">${esc(tag)}</span>`;
     const dis = canWrite() ? "" : "disabled";
     if (i.kind === "wydarzenie") return `<li><button type="button" class="pl-item" data-plact="editEv" data-id="${esc(i.id)}" ${dis}>${inner}</button></li>`;
     if (i.kind === "test") return `<li><button type="button" class="pl-item" data-plact="editTest" data-id="${esc(i.tid)}" ${dis}>${inner}</button></li>`;
     if (i.kind === "cel") return `<li><button type="button" class="pl-item" data-plact="go" data-v="goals" data-arg="${esc(i.gid)}">${inner}</button></li>`;
     if (i.kind === "zawody") return `<li><button type="button" class="pl-item" data-plact="go" data-v="swim">${inner}</button></li>`;
+    if (i.kind === "urodziny") return `<li><button type="button" class="pl-item" data-plact="go" data-v="birthdays" data-arg="${esc(i.bid)}">${inner}</button></li>`;
     return `<li><div class="pl-item">${inner}</div></li>`;
   };
   const addButtons = (k, s, label) => `<div class="actions"><button type="button" class="btn primary" data-plact="addEv" data-v="${esc(k)}" ${canWrite() ? "" : "disabled"}>+ ${label}</button>${testsOk(s) ? `<button type="button" class="btn" data-plact="addTest" data-v="${esc(k)}" ${canWrite() ? "" : "disabled"}>+ Test</button>` : ""}</div>`;
@@ -217,6 +219,8 @@
     const hab = safe(() => (s.habitsOn ? s.habitsOn(T) : null), null);
     const late = safe(() => (s.goalsOverdue ? s.goalsOverdue() : []), []);
     const rev = safe(() => (s.reviewDue ? s.reviewDue() : 0), 0);
+    // panels of the other sections (sleep, homework, birthdays), each drawn by its own module
+    const widgets = safe(() => (s.widgets ? s.widgets(T) : []), []);
     const days = [];
     for (let i = 1; i <= 7; i++) { const k = addDays(T, i), it = agenda(S, s, k); if (it.length) days.push({ k, it }); }
     const tests = days.reduce((a, d) => a + d.it.filter(x => x.kind === "test").length, 0);
@@ -231,6 +235,7 @@
         ${items.length ? `<ul class="pl-items">${items.map(item).join("")}</ul>` : `<p class="meta">Nic więcej na dziś.</p>`}
         ${addButtons(T, s, "Wydarzenie")}
       </section>
+      ${widgets.join("")}
       ${late.length ? `<section class="panel gl-late"><h2>Zaległe kroki celów</h2><ul class="pl-items">${late.slice(0, 6).map(x => item({ kind: "cel", title: x.step.title, sub: `${x.goal.title} · ${when(daysBetween(T, x.step.date))}`, cat: "cel", late: true, gid: x.goal.id })).join("")}</ul></section>` : ""}
       <section class="panel"><h2>Najbliższe 7 dni</h2>
         ${days.length ? days.map(d => `<div class="pl-day"><p class="pl-dh">${esc(cap(fmtShortDay.format(parseDay(d.k))))} <span class="meta">· ${esc(when(daysBetween(T, d.k)))}</span></p><ul class="pl-items">${d.it.map(item).join("")}</ul></div>`).join("")
