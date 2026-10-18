@@ -198,7 +198,7 @@
     lost("planEvents", "Wydarzenia w kalendarzu");
     lost("goals", "Cele");
     lost("portfolio", "Portfolio (aktywności i osiągnięcia)");
-    lost("studyTopics", "Tematy w nauce (z postępem)");
+    lost("studyTopics", "Działy z postępem (matura)");
     lost("homework", "Zadania domowe");
     lost("sleepNights", "Zapisane noce (sen)");
     lost("birthdays", "Urodziny");

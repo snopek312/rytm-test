@@ -812,62 +812,23 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
 .st-catch{padding:3px 8px;font-size:.7rem}
 .seg.small.st-filter{display:flex;flex-wrap:wrap;align-self:flex-start}
 .tile .v.st-date{font-size:1.15rem}
-.btn.small{padding:5px 10px;font-size:.78rem}
-.st-name small{display:block;color:var(--muted);font-size:.74rem}
-.st-t.late .st-name small{color:var(--bad);font-weight:600}
-.st-tact{display:flex;gap:4px;align-items:center}
-.st-long{gap:8px}
-.st-long .seg{display:flex;align-self:flex-start}
-.tile .v.st-hours{font-size:1.25rem;line-height:1.5}
-@media (max-width:480px){.tiles.lf-tiles3 .tile .v.st-hours{font-size:1rem}}
-/* revisions due */
-.st-rev,.st-tests,.st-less,.st-prs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.st-rev li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
-.st-rev li:last-child,.st-tests li:last-child,.st-less li:last-child{border-bottom:0}
-.st-revn,.st-tn,.st-ln,.st-prn{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
-.st-revn small,.st-tn small,.st-ln small,.st-prn small{color:var(--muted);font-size:.78rem}
-.btn.st-ok{background:var(--good-soft);border-color:var(--good);color:var(--fg)}
-.btn.st-no{min-width:40px}
-@media (prefers-reduced-motion:no-preference){.st-rev li{animation:lf-in .3s ease both}}
-/* coming tests */
-.st-tests li{display:grid;grid-template-columns:3.2em minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
-.st-in{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;background:var(--accent-soft);padding:6px 2px;line-height:1.1}
-.st-in b{font-family:var(--f-display);font-size:1.2rem}
-.st-in small{font-size:.66rem;color:var(--muted)}
-.st-tests li.soon .st-in{background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--rope)}
-.st-tn small.st-todo{color:var(--fg);opacity:.8}
-/* today's lessons */
-.st-lchips .chip.done:not([aria-pressed="true"]){border-color:var(--good);background:var(--good-soft)}
-.st-lform{flex-wrap:nowrap}
-.st-lform input[type="text"]{flex:1 1 auto;min-width:0}
-.st-ladded{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:.84rem}
-.st-ladded b{font-weight:600;color:var(--muted)}
-/* a topic of learning now: the status and the name, below when it comes back and the buttons */
-.st-t.st-nt{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"pill name" "sub sub";row-gap:4px;padding:8px 0}
-.st-nt .st-pill{grid-area:pill}
-.st-nt .st-name{grid-area:name;overflow-wrap:anywhere}
-.st-nsub{grid-area:sub;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.st-nsub small{color:var(--muted);font-size:.75rem}
-.st-t.late .st-nsub small{color:var(--bad);font-weight:600}
-.st-prb .st-topics li:last-child{border-bottom:0}
-/* subjects by priority */
-.st-pr{border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--bg);overflow:hidden;transition:border-color .2s}
-.st-pr.open{border-color:var(--accent)}
-.st-pr.soon{box-shadow:inset 3px 0 0 var(--rope)}
-.st-prh{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;background:none;border:0;padding:10px 12px;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
-.st-prc{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
-.st-prb{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
-@media (prefers-reduced-motion:no-preference){.st-prb{animation:lf-in .25s ease both}}
-/* learning time */
-.st-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:118px}
-.st-wd{display:flex;flex-direction:column;align-items:center;gap:2px;height:100%}
-.st-wb{flex:1;width:100%;max-width:30px;background:var(--ring-track);border-radius:7px;display:flex;align-items:flex-end;overflow:hidden}
-.st-wb i{display:block;width:100%;background:linear-gradient(180deg,var(--accent),var(--h0));border-radius:7px;transition:height .4s cubic-bezier(.2,.7,.2,1)}
-.st-wd small{font-size:.7rem;color:var(--muted)}
-.st-wd.today small:first-of-type{color:var(--accent);font-weight:700}
-.st-wm{min-height:1em;font-variant-numeric:tabular-nums}
-.st-log{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-.st-log select{max-width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:7px 10px}
+/* the red dot of a birthday reminder (on "Więcej", left of the icon; the save state keeps its dot on the right) */
+.bb.has-alert::before{content:"";position:absolute;top:4px;left:calc(50% - 23px);width:10px;height:10px;border-radius:50%;background:#e5383b;border:2px solid var(--surface);z-index:1}
+.more-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#e5383b;margin-left:7px;vertical-align:middle;position:relative;top:-1px}
+@media (prefers-reduced-motion:no-preference){.bb.has-alert::before,.more-dot{animation:alert-pulse 1.8s ease-in-out 3}}
+@keyframes alert-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+/* birthdays: groups by month, the pasted list, memorials */
+.bd-btns{display:flex;gap:8px;flex-wrap:wrap}
+.seg.small.bd-order{display:flex;align-self:flex-start;margin-top:4px}
+.bd-month{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.bd-month:first-of-type{margin-top:4px}
+.bd-item.memorial{opacity:.85}
+.bd-item.memorial .bd-cal::before{background:var(--muted)}
+.bd-paste code{font-family:var(--f-mono);font-size:.78rem;background:var(--accent-soft);padding:1px 5px;border-radius:5px}
+.bd-pasteprev{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.bd-pasteprev p{margin:0}
+.bd-pl{margin:0;padding-left:18px;font-size:.86rem;display:flex;flex-direction:column;gap:2px;max-height:300px;overflow:auto}
+.bd-bad{margin:0;padding-left:18px}
 /* homework (18.10.2026) */
 .hw-quick{display:flex;flex-direction:column;gap:6px}
 .hw-qrow{display:flex;gap:8px}
@@ -1270,8 +1231,8 @@ button.pl-item{cursor:pointer}
   <section class="view" id="v-study" aria-labelledby="st-title-main" hidden>
     <header class="vh"><div><button type="button" class="btn link lf-back" data-goview="data">‹ Więcej</button><p class="eyebrow">Rytm</p><h1 id="st-title-main">Nauka</h1></div></header>
     <nav class="tabs lf-tabs sttabs" role="tablist" aria-label="Nauka">
-      <button class="tab" role="tab" id="stt-teraz" aria-selected="true">Na bieżąco</button>
-      <button class="tab" role="tab" id="stt-dalej" aria-selected="false">Matura i SAT</button>
+      <button class="tab" role="tab" id="stt-matura" aria-selected="true">Matura</button>
+      <button class="tab" role="tab" id="stt-testy" aria-selected="false">SAT i angielski</button>
     </nav>
     <div id="stRoot"></div>
   </section>
@@ -1407,7 +1368,8 @@ function showView(v){
   clearTimeout(showView.t); showView.t = setTimeout(() => ve.classList.remove("enter"), 800);
   for(const x of ["today","habits","swim","school","data"]) $("bb-"+x).toggleAttribute("aria-current", x === (BAR_OF[v] || v));
   if(v === "swim"){ showTab(swimTab); }
-  else { setHash(VIEW_HASH[v]); ({ today: Plan, school: School, homework: Homework, sleep: Sleep, birthdays: Birthdays, goals: Goals, portfolio: Portfolio, study: Study, savings: Savings, habits: Habits }[v] || { render: renderData }).render(); }
+  else { if(v === "birthdays") Birthdays.markSeen(); setHash(VIEW_HASH[v]); ({ today: Plan, school: School, homework: Homework, sleep: Sleep, birthdays: Birthdays, goals: Goals, portfolio: Portfolio, study: Study, savings: Savings, habits: Habits }[v] || { render: renderData }).render(); }
+  updateBadges();
   try{ window.scrollTo({top:0}); }catch(e){}
 }
 const TAB_HASH = { ov: "#przeglad", tr: "#treningi", rec: "#rekordy", fr: "#frekwencja" };
@@ -1418,6 +1380,13 @@ const Goals = window.RytmGoals, Portfolio = window.RytmPortfolio, Study = window
 const Homework = window.RytmHomework, Sleep = window.RytmSleep, Birthdays = window.RytmBirthdays;
 document.addEventListener("click", e => { const b = e.target.closest("[data-goview]"); if(b) showView(b.dataset.goview); });
 // the tiles at the top of "Więcej" (never any amounts of the savings)
+// the red dot of birthdays (a week before, 2 days before, on the day) on "Więcej" and on the Urodziny tile; opening Urodziny reads it
+function updateBadges(){
+  const n = Birthdays.alertCount(), bb = $("bb-data");
+  bb.classList.toggle("has-alert", n > 0);
+  if(n) bb.setAttribute("aria-label", "Więcej — przypomnienie o urodzinach"); else bb.removeAttribute("aria-label");
+  const tile = $("mt-birthdays"); if(tile && !!tile.querySelector(".more-dot") !== n > 0) renderMore();
+}
 function renderMore(){
   const ic = { homework:'<rect x="5" y="3.5" width="14" height="17.5" rx="2"/><path d="M8.5 9l1.8 1.8L14 7.2M8.5 15h7" stroke-linecap="round" stroke-linejoin="round"/>',
     sleep:'<path d="M19.5 14.6A7.8 7.8 0 0 1 9.4 4.5a7.8 7.8 0 1 0 10.1 10.1z" stroke-linejoin="round"/><path d="M16 4.5h3l-3 3.5h3" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -1427,7 +1396,8 @@ function renderMore(){
     study:'<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z" stroke-linejoin="round"/>',
     savings:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3" stroke-linecap="round"/><circle cx="12" cy="15.5" r="1.4" fill="currentColor"/>' };
   const t = [["homework","Zadania domowe",Homework.summary()],["sleep","Sen",Sleep.summary()],["birthdays","Urodziny",Birthdays.summary()],["goals","Cele",Goals.summary()],["portfolio","Portfolio",Portfolio.summary()],["study","Nauka",Study.summary()],["savings","Oszczędzanie",Savings.summary()]];
-  $("moreTiles").innerHTML = t.map(([v,name,sub])=>`<button type="button" class="more-tile" id="mt-${v}" data-goview="${v}"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">${ic[v]}</svg><span><b>${name}</b><small>${esc(sub)}</small></span><span class="more-go" aria-hidden="true">›</span></button>`).join("");
+  const alert = Birthdays.alertCount();
+  $("moreTiles").innerHTML = t.map(([v,name,sub])=>`<button type="button" class="more-tile" id="mt-${v}" data-goview="${v}"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">${ic[v]}</svg><span><b>${name}${v === "birthdays" && alert ? `<i class="more-dot" role="img" aria-label="nowe przypomnienie"></i>` : ""}</b><small>${esc(sub)}</small></span><span class="more-go" aria-hidden="true">›</span></button>`).join("");
 }
 function showTab(which){
   swimTab = which;
@@ -1901,7 +1871,7 @@ function renderPreview(){
   const box = $("impPreview"), p = pending;
   if(!p){ box.hidden = true; box.innerHTML = ""; return; }
   const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni (nawyki)","skippedDays"],["Oznaczone dni treningowe","cancelledTrainings"],["Nieobecności zaznaczone ręcznie","markedAbsences"],["Oceny (szkoła)","schoolGrades"],["Wyniki wpisane ręcznie (rekordy)","manualRecords"],
-    ["Wydarzenia w kalendarzu","planEvents"],["Cele","goals"],["Portfolio (aktywności i osiągnięcia)","portfolio"],["Tematy w nauce (z postępem)","studyTopics"],["Oszczędzanie (zaszyfrowane)","savings"],
+    ["Wydarzenia w kalendarzu","planEvents"],["Cele","goals"],["Portfolio (aktywności i osiągnięcia)","portfolio"],["Działy z postępem (matura)","studyTopics"],["Oszczędzanie (zaszyfrowane)","savings"],
     ["Zadania domowe","homework"],["Zapisane noce (sen)","sleepNights"],["Urodziny","birthdays"]];
   const cell = (k, v) => k === "savings" ? (v ? "zaszyfrowane" : "–") : (v ?? "–");
   const when = new Date(p.backup.exportedAt);
@@ -2035,7 +2005,7 @@ function habitsPersist(){
 function schoolPersist(){
   const B = RytmData.bridge;
   return { load: ()=>B.loadSchool(), save: s=>B.saveSchool(s), whenSaved: RytmData.whenSaved, writable: ()=>RytmData.mode === "normal",
-    onChange: ()=>{ if(curView === "today") Plan.render(); else if(curView === "study") Study.render(); else if(curView === "homework") Homework.render(); } };
+    onChange: ()=>{ if(curView === "today") Plan.render(); else if(curView === "homework") Homework.render(); } };
 }
 function recordsPersist(){
   const B = RytmData.bridge;
@@ -2052,7 +2022,7 @@ function planSources(){
   let habitsOn = null;
   try{ const HS = Habits.exportState(); if(HS && Array.isArray(HS.habits)) habitsOn = k => Habits.core.daySummary(HS, k); }catch(e){}
   return { school: School.exportState(), schoolCats: School.CATS, attendance: Attendance.exportState(), habitsOn,
-    goalsDue: (a,b)=>Goals.dueBetween(a,b), goalsOverdue: ()=>Goals.overdue(), reviewDue: ()=>(Study.reviewDue ? Study.reviewDue() : 0),
+    goalsDue: (a,b)=>Goals.dueBetween(a,b), goalsOverdue: ()=>Goals.overdue(),
     birthdaysOn: k=>Birthdays.on(k), widgets: T=>planWidgets(T) };
 }
 // the panels on Dziś from sleep (with what is on tomorrow), homework and birthdays
@@ -2067,13 +2037,6 @@ function homeworkSources(){ return { subjects: School.exportState().subjects.map
 // for sleep: was there a training that started after 16:00 on day k
 function sleepSources(){ return { eveningTraining: k=>Trainings.list().some(t=>t && t.date instanceof Date && Plan.dayKey(t.date) === k && t.date.getHours() >= 16) }; }
 const refreshToday = ()=>{ if(curView === "today") Plan.render(); };
-// what Nauka shows from the other sections: Szkoła's subjects, this school year's grades and tests, the timetable
-function studySources(){
-  const sc = School.exportState(), T = Plan.dayKey(new Date()), R = School.range(School.schoolYearOf(T), "rok", sc.settings.semEnd), ov = School.overview(sc, R);
-  return { subjects: sc.subjects.map(s=>({ id:s.id, name:s.name })), tests: sc.tests, cats: School.CATS,
-    grades: ov.rows.map(r=>({ sid:r.s.id, avg:r.st.avg, grade:r.st.grade, target:r.s.target, need:r.st.need })),
-    lessonsOn: k=>Plan.lessonsOn(Plan.state, k) };
-}
 function planGo(view, arg){
   if(view === "goals" && arg) Goals.openGoal(arg);
   if(view === "today" && arg) Plan.showTab(arg);
@@ -2096,11 +2059,12 @@ function useData(){
   Records.attach(recordsPersist());
   Goals.attach(partPersist("goals"));
   Portfolio.attach(partPersist("portfolio", { trainings: ()=>Trainings.list() }));
-  Study.attach(partPersist("study", { sources: studySources, go: planGo }));
+  Study.attach(partPersist("study"));
   Savings.attach(partPersist("savings"));
   Homework.attach(partPersist("homework", { sources: homeworkSources, go: planGo, onChange: refreshToday }));
   Sleep.attach(partPersist("sleep", { sources: sleepSources, go: planGo, onChange: refreshToday }));
-  Birthdays.attach(partPersist("birthdays", { go: planGo, onChange: refreshToday }));
+  // a change made while looking at Urodziny (e.g. a new person in a week) is already read
+  Birthdays.attach(partPersist("birthdays", { go: planGo, onChange: ()=>{ if(curView === "birthdays") Birthdays.markSeen(); refreshToday(); updateBadges(); } }));
   Plan.attach(partPersist("plan", { sources: planSources, go: planGo, saveTest: t=>School.saveTest(t), deleteTest: id=>School.deleteTest(id) }));
   const csv = RytmData.bridge.loadCsv();
   all = []; csvText = null;
@@ -2109,6 +2073,7 @@ function useData(){
   Habits.attach(habitsPersist());
   if(!$("v-data").hidden) renderData();
   if(!$("v-swim").hidden) showTab(swimTab);
+  updateBadges();
 }
 Trainings.mount({ onDelete: deleteTraining });
 Attendance.mount();

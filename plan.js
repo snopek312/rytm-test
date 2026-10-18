@@ -218,14 +218,12 @@
     const safe = (f, d) => { try { return f(); } catch (e) { return d; } };
     const hab = safe(() => (s.habitsOn ? s.habitsOn(T) : null), null);
     const late = safe(() => (s.goalsOverdue ? s.goalsOverdue() : []), []);
-    const rev = safe(() => (s.reviewDue ? s.reviewDue() : 0), 0);
     // panels of the other sections (sleep, homework, birthdays), each drawn by its own module
     const widgets = safe(() => (s.widgets ? s.widgets(T) : []), []);
     const days = [];
     for (let i = 1; i <= 7; i++) { const k = addDays(T, i), it = agenda(S, s, k); if (it.length) days.push({ k, it }); }
     const tests = days.reduce((a, d) => a + d.it.filter(x => x.kind === "test").length, 0);
     const chips = [hab && hab.total ? `<button type="button" class="chip" data-plact="go" data-v="habits">Nawyki: ${hab.done} z ${hab.total}${hab.done === hab.total ? " ✓" : ""}</button>` : "",
-      rev ? `<button type="button" class="chip" data-plact="go" data-v="study">Do powtórki: ${rev}</button>` : "",
       tests ? `<button type="button" class="chip" data-plact="tab" data-v="kalendarz">${tests} ${plural(tests, "test", "testy", "testów")} w 7 dni</button>` : ""].join("");
     return `<section class="panel pl-today">
         <h2>${esc(cap(fmtDay.format(parseDay(T))))}</h2>
