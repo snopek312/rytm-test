@@ -800,9 +800,10 @@
       case "tstop": stopTimer(true); break;
       case "tdrop": stopTimer(false); break;
       case "amt": {
-        const cur = val(S, selDay, h), step = h.step || (h.type === "time" ? 5 : 1);
-        const base = cur == null ? (Number(b.dataset.d) > 0 ? h.goal - step : h.goal + step) : cur;
-        setVal(h, selDay, Math.max(0, Math.round((base + Number(b.dataset.d) * step) * 100) / 100)); break;
+        // "+" adds one step (water 2 l with a step of 0,2 → 0,2 · 0,4 …); with nothing written yet "−" has nothing to take away
+        const cur = val(S, selDay, h), step = h.step || (h.type === "time" ? 5 : 1), d = Number(b.dataset.d);
+        if (cur == null && d < 0) break;
+        setVal(h, selDay, Math.max(0, Math.round(((cur || 0) + d * step) * 100) / 100)); break;
       }
       case "detail": mode = { view: "detail", id: h.id }; render(); scrollTop(); break;
       case "back": mode = { view: "list" }; render(); break;
