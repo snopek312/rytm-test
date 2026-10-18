@@ -9,7 +9,7 @@
 
   /* ================= core (no DOM) ================= */
   const DAY = /^\d{4}-\d{2}-\d{2}$/, HM = /^([01]\d|2[0-3]):[0-5]\d$/;
-  const HOURS = [8, 8.5, 9, 9.5];
+  const HOURS = [7, 7.5, 8, 8.5, 9, 9.5];
   const pad = n => String(n).padStart(2, "0");
   const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const parseDay = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d, 12); };
