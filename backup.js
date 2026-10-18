@@ -7,12 +7,15 @@
 //     attendance: {days:[1..7], from:day|null, cancelled:{day:reason}, absent:{day:""}}   // optional, since 16.10.2026;
 //     school: {v:1, subjects:[...], grades:[{id,sid,pct,w,cat,desc,date,...}], tests:[...], settings:{...}}   // optional, 16.10.2026;
 //     manualRecords: {v:1, entries:[{id,pool,stroke,dist,time,date,kind,note,fix,fixTime}]}   // optional, 17.10.2026;
+//     plan: {v:1, bells, lessons, events}, goals: {v:1, goals}, portfolio: {v:1, activities, awards},
+//     study: {v:1, maturaDate, subjects, tests}, savings: {v:1, box, old}  (savings: encrypted with the user's PIN)   // optional, 17.10.2026;
 //   } }                                                                  // older versions ignore it, so it stays format 1
 (function (g) {
   "use strict";
   const FORMAT = 1;
   const HABIT_TYPES = ["count", "bool", "amount", "time"];
   const DAY = /^\d{4}-\d{2}-\d{2}$/;
+  const PARTS = ["plan", "goals", "portfolio", "study", "savings"];
   const isObj = v => v !== null && typeof v === "object" && !Array.isArray(v);
 
   // FNV-1a over the UTF-16 code units: detects a cut-off or hand-edited file (not a security measure)
@@ -39,6 +42,11 @@
       markedAbsences: Object.keys((data.attendance && data.attendance.absent) || {}).length,
       schoolGrades: ((data.school && data.school.grades) || []).length,
       manualRecords: ((data.manualRecords && data.manualRecords.entries) || []).length,
+      planEvents: ((data.plan && data.plan.events) || []).length,
+      goals: ((data.goals && data.goals.goals) || []).length,
+      portfolio: ((data.portfolio && data.portfolio.activities) || []).length + ((data.portfolio && data.portfolio.awards) || []).length,
+      studyTopics: ((data.study && data.study.subjects) || []).reduce((a, s) => a + ((s && s.topics) || []).filter(t => t && t.st > 0).length, 0),
+      savings: data.savings && (data.savings.box || (data.savings.old || []).length) ? 1 : 0,
       firstDay: allDays[0] || null,
       lastDay: allDays[allDays.length - 1] || null,
     };
@@ -54,6 +62,7 @@
     if (state.attendance) data.attendance = { days: state.attendance.days || [], from: state.attendance.from || null, cancelled: state.attendance.cancelled || {}, absent: state.attendance.absent || {} };
     if (state.school) data.school = state.school;
     if (state.manualRecords) data.manualRecords = state.manualRecords;
+    for (const p of PARTS) if (state[p]) data[p] = state[p];
     const json = JSON.stringify(data);
     return {
       app: "rytm", kind: "backup", format: FORMAT,
@@ -151,6 +160,14 @@
       else if (!mr.entries.every(x => isObj(x) && typeof x.id === "string" && typeof x.time === "number" && x.time > 0 && typeof x.dist === "number" && typeof x.stroke === "string" && DAY.test(x.date || "")))
         errors.push("Lista wyników wpisanych ręcznie ma zły format.");
     }
+    // the parts added on 17.10.2026 (optional): the shape only; each module cleans the details when it loads them
+    const part = (k, name, ok) => { const v = d[k]; if (v !== undefined && v !== null && !(isObj(v) && ok(v))) errors.push(`Część „${name}” ma zły format.`); };
+    const box = b => isObj(b) && typeof b.salt === "string" && typeof b.iv === "string" && typeof b.ct === "string" && Number.isInteger(b.iter);
+    part("plan", "kalendarz i plan lekcji", v => Array.isArray(v.events) && (v.lessons === undefined || isObj(v.lessons)) && (v.bells === undefined || Array.isArray(v.bells)));
+    part("goals", "cele", v => Array.isArray(v.goals) && v.goals.every(x => isObj(x) && typeof x.id === "string" && typeof x.title === "string" && Array.isArray(x.steps)));
+    part("portfolio", "portfolio", v => Array.isArray(v.activities) && Array.isArray(v.awards));
+    part("study", "nauka", v => Array.isArray(v.subjects) && Array.isArray(v.tests));
+    part("savings", "oszczędzanie", v => (v.box === null || box(v.box)) && Array.isArray(v.old) && v.old.every(box));
     const uniq = [...new Set(errors)];
     if (uniq.length) return { ok: false, errors: uniq.slice(0, 8), warnings, backup: null, summary: null };
     return { ok: true, errors: [], warnings, backup: obj, summary: summarize(d, csvRows) };
@@ -169,6 +186,11 @@
     lost("markedAbsences", "Nieobecności zaznaczone ręcznie");
     lost("schoolGrades", "Oceny (szkoła)");
     lost("manualRecords", "Wyniki wpisane ręcznie (rekordy)");
+    lost("planEvents", "Wydarzenia w kalendarzu");
+    lost("goals", "Cele");
+    lost("portfolio", "Portfolio (aktywności i osiągnięcia)");
+    lost("studyTopics", "Działy z postępem (matura)");
+    if ((current.savings || 0) > (incoming.savings || 0)) out.push("Oszczędzanie: na urządzeniu są zaszyfrowane dane, a w kopii ich nie ma.");
     if (current.lastDay && incoming.lastDay && incoming.lastDay < current.lastDay)
       out.push(`Najnowsze dane w kopii są z ${incoming.lastDay}, a na urządzeniu z ${current.lastDay}.`);
     return out;

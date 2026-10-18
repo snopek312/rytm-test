@@ -109,6 +109,12 @@
     function loadSchool() { const r = store.get("meta", "school"); return r ? copy(r.data) : null; }
     const saveSchool = sc => commit(diff("meta", sc ? new Map([["school", { data: sc }]]) : new Map(), metaOnly("school")));
 
+    /* ---------- parts kept as one record each in meta: plan (Dziś), goals, portfolio, study (Nauka), savings (encrypted) ---------- */
+    // null = never saved
+    const own = id => { if (!PARTS.includes(id)) throw new Error("nieznana część danych: " + id); return id; };
+    function loadPart(id) { const r = store.get("meta", own(id)); return r ? copy(r.data) : null; }
+    const savePart = (id, d) => commit(diff("meta", d ? new Map([[own(id), { data: d }]]) : new Map(), metaOnly(id)));
+
     /* ---------- results typed in by hand (Rekordy): competitions, swims the watch missed, corrected times — one record in meta ---------- */
     // null = never saved
     function loadManualRecords() { const r = store.get("meta", "manualRecords"); return r ? copy(r.data) : null; }
@@ -142,6 +148,8 @@
       if (data.school) records.meta.push({ id: "school", data: copy(data.school) });
       // results typed in by hand: optional too (since 17.10.2026)
       if (data.manualRecords) records.meta.push({ id: "manualRecords", data: copy(data.manualRecords) });
+      // the parts added on 17.10.2026 (optional as well)
+      for (const p of PARTS) if (data[p]) records.meta.push({ id: p, data: copy(data[p]) });
       // the note that the old data was already moved stays: otherwise, after loading a backup with no data,
       // the next start would offer moving the old data again
       const mig = store.get("meta", "migration");
@@ -149,10 +157,11 @@
       return records;
     }
 
-    return { loadFit, saveFit, fitOps, loadHabits, saveHabits, habitOps, loadCsv, saveCsv, loadTimer, saveTimer, loadUndo, dropUndo, lastBackup, recordsFromBackup, loadAttendance, saveAttendance, loadSchool, saveSchool, loadManualRecords, saveManualRecords };
+    return { loadFit, saveFit, fitOps, loadHabits, saveHabits, habitOps, loadCsv, saveCsv, loadTimer, saveTimer, loadUndo, dropUndo, lastBackup, recordsFromBackup, loadAttendance, saveAttendance, loadSchool, saveSchool, loadManualRecords, saveManualRecords, loadPart, savePart };
   }
 
-  const api = { create };
+  const PARTS = ["plan", "goals", "portfolio", "study", "savings"];
+  const api = { create, PARTS };
   g.RytmBridge = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

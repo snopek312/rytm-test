@@ -190,7 +190,7 @@
         <input name="f" type="text" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="00" value="${esc(d.f)}" aria-label="Setne sekundy">
         <output id="rmPrev" class="meta"></output></span></div>
       ${fixMode ? "" : `<label class="sc-field"><span class="k">Data</span><input name="date" type="date" value="${esc(d.date)}" max="${esc(today())}"></label>`}
-      <label class="sc-field"><span class="k">Opis</span><input name="note" type="text" maxlength="120" placeholder="${fixMode ? "np. czas ze stopera trenera" : "np. Mistrzostwa Elbląga, finał"}" value="${esc(d.note)}"></label>
+      <label class="sc-field"><span class="k">Opis</span><input name="note" type="text" maxlength="120" placeholder="${fixMode ? "np. czas ze stopera trenera" : "np. Mistrzostwa okręgu, finał"}" value="${esc(d.note)}"></label>
       <p class="sc-err" id="rmErr" role="alert"></p>
       <div class="actions"><button type="submit" class="btn primary">Zapisz</button><button type="button" class="btn" data-rmform="close">Anuluj</button>${del}</div></form>`;
     preview();

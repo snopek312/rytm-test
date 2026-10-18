@@ -1,4 +1,4 @@
-// Rytm: school ("Szkoła") — grades in percent, as at 2 LO Elbląg:
+// Rytm: school ("Szkoła") — grades in percent, with the limits of a percent-based school:
 //   1–39 → 1, 40–54 → 2, 55–69 → 3, 70–84 → 4, 85–94 → 5, 95–100 → 6 (the limits can be changed in the settings).
 // Each grade: subject, percent, weight 1–10, kind (praca klasowa, sprawdzian, kartkówka, ...), description, date, and optionally:
 // a mark for the analysis ("ok" or "zle" — I do not like it), a planned retake percent (only for "what if") and a
