@@ -470,7 +470,7 @@
     const c = $("saveCard"); if (c) c.addEventListener("click", onCardClick);
     if (cfg.test) {
       const band = document.createElement("div");
-      band.className = "testband"; band.id = "testBand"; band.setAttribute("role", "note");
+      band.className = "testband"; band.id = "testBand"; band.setAttribute("role", "note"); band.setAttribute("translate", "no");   // stays "WERSJA TESTOWA" in English too
       band.textContent = cfg.label || "WERSJA TESTOWA";
       document.body.prepend(band);
       document.body.classList.add("is-test");

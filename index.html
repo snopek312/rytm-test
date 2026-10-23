@@ -852,6 +852,28 @@ body.is-test #notices{padding-top:calc(40px + env(safe-area-inset-top,0px))}
 .hw-item.done .hw-tx{text-decoration:line-through;color:var(--muted)}
 .hw-group.late{border-color:var(--bad)}
 @media (prefers-reduced-motion:no-preference){.hw-item.done .hw-check{animation:pop .35s ease}}
+.vh-gear{align-self:flex-start;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
+.vh-gear:hover{color:var(--fg)}
+.set-clock{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:10px}
+.set-clock b{font-family:var(--f-display);font-size:1.9rem;font-variant-numeric:tabular-nums;font-weight:600}
+.set-clock span{color:var(--muted);font-size:.88rem}
+.set-lang .seg{max-width:340px;margin-top:6px}
+.set-ver{margin:14px 4px!important}
+.hw-due{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:4px 10px;font:inherit;font-size:.85rem;color:var(--fg);cursor:pointer}
+.hw-due i{font-style:normal;color:var(--muted);font-size:.75em}
+.hw-cal{width:100%;max-width:340px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface);margin-top:2px}
+.hw-calh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px}
+.hw-calh b{font-family:var(--f-display);font-weight:600}
+.hw-calg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.hw-cdow{font-size:.66rem;color:var(--muted);text-align:center;font-weight:700;text-transform:uppercase}
+.hw-cd{height:34px;border:0;border-radius:8px;background:none;color:var(--fg);font:inherit;font-size:.85rem;cursor:pointer;padding:0;font-variant-numeric:tabular-nums}
+.hw-cd.out{opacity:.4}
+.hw-cd.lesson{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.hw-cd.today{box-shadow:inset 0 0 0 1.5px var(--line)}
+.hw-cd[aria-pressed="true"]{background:var(--accent);color:var(--bg);font-weight:700}
+.hw-cd:disabled{opacity:.25;cursor:default}
+.hw-calk{font-size:.74rem;color:var(--muted);margin:6px 0 0!important;display:flex;align-items:center;gap:6px}
+.hw-calk i{width:12px;height:12px;border-radius:4px;background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
 /* sleep (18.10.2026) */
 .sl-log{display:flex;flex-direction:column;gap:8px}
 .sl-times{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
@@ -1241,8 +1263,13 @@ button.pl-item{cursor:pointer}
     <div id="svRoot"></div>
   </section>
 
+  <section class="view" id="v-settings" aria-labelledby="set-title-main" hidden>
+    <header class="vh"><div><button type="button" class="btn link lf-back" data-goview="data">‹ Więcej</button><p class="eyebrow">Rytm</p><h1 id="set-title-main">Ustawienia</h1></div></header>
+    <div id="setRoot"></div>
+  </section>
+
   <section class="view" id="v-data" aria-labelledby="d-title-main" hidden>
-    <header class="vh"><div><p class="eyebrow">Rytm</p><h1 id="d-title-main">Więcej</h1></div></header>
+    <header class="vh"><div><p class="eyebrow">Rytm</p><h1 id="d-title-main">Więcej</h1></div><button type="button" class="icon-btn vh-gear" id="setOpen" data-goview="settings" aria-label="Ustawienia" title="Ustawienia"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8l1.6 2.3 2.7-.7.7 2.7 2.3 1.6-1.2 2.5 1.2 2.5-2.3 1.6-.7 2.7-2.7-.7L12 21.2l-1.6-2.3-2.7.7-.7-2.7-2.3-1.6L5.9 12 4.7 9.5 7 7.9l.7-2.7 2.7.7z" stroke-linejoin="round"/></svg></button></header>
     <div class="more-tiles" id="moreTiles"></div>
     <h2 class="sect" id="dataSect">Dane</h2>
     <section class="panel" id="saveCard" hidden aria-labelledby="saveTitle"></section>
@@ -1322,6 +1349,8 @@ button.pl-item{cursor:pointer}
 <div id="bdSheet" class="sc-sheet" hidden></div>
 
 <script src="notify.js"></script>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
 <script>window.RytmConfig=Object.assign(window.RytmConfig||{},{"legacy": false})</script>
 <script src="vendor/chart.umd.js"></script>
 <script src="fit-vendor.js"></script>
@@ -1345,6 +1374,7 @@ button.pl-item{cursor:pointer}
 <script src="homework.js"></script>
 <script src="sleep.js"></script>
 <script src="birthdays.js"></script>
+<script src="settings.js"></script>
 <script src="plan.js"></script>
 <script>
 const SAMPLE_CSV = /*SAMPLE_CSV*/null;
@@ -1355,9 +1385,9 @@ const $ = id => document.getElementById(id);
 let swimTab = "ov";
 function setHash(h){ try{ history.replaceState(null, "", h); }catch(e){} }
 // the bottom bar: Dziś · Nawyki · Pływanie · Szkoła · Więcej; Cele, Portfolio, Nauka and Oszczędzanie open from "Więcej" (= the data view)
-const VIEWS = ["today","habits","swim","school","data","homework","sleep","birthdays","goals","portfolio","study","savings"];
-const BAR_OF = { homework:"data", sleep:"data", birthdays:"data", goals:"data", portfolio:"data", study:"data", savings:"data" };
-const VIEW_HASH = { today:"#dzis", habits:"#nawyki", school:"#szkola", data:"#dane", homework:"#zadania", sleep:"#sen", birthdays:"#urodziny", goals:"#cele", portfolio:"#portfolio", study:"#nauka", savings:"#oszczedzanie" };
+const VIEWS = ["today","habits","swim","school","data","homework","sleep","birthdays","goals","portfolio","study","savings","settings"];
+const BAR_OF = { homework:"data", sleep:"data", birthdays:"data", goals:"data", portfolio:"data", study:"data", savings:"data", settings:"data" };
+const VIEW_HASH = { today:"#dzis", habits:"#nawyki", school:"#szkola", data:"#dane", homework:"#zadania", sleep:"#sen", birthdays:"#urodziny", goals:"#cele", portfolio:"#portfolio", study:"#nauka", savings:"#oszczedzanie", settings:"#ustawienia" };
 let curView = null;
 function showView(v){
   if(!VIEWS.includes(v)) v = "today";
@@ -1368,7 +1398,7 @@ function showView(v){
   clearTimeout(showView.t); showView.t = setTimeout(() => ve.classList.remove("enter"), 800);
   for(const x of ["today","habits","swim","school","data"]) $("bb-"+x).toggleAttribute("aria-current", x === (BAR_OF[v] || v));
   if(v === "swim"){ showTab(swimTab); }
-  else { if(v === "birthdays") Birthdays.markSeen(); setHash(VIEW_HASH[v]); ({ today: Plan, school: School, homework: Homework, sleep: Sleep, birthdays: Birthdays, goals: Goals, portfolio: Portfolio, study: Study, savings: Savings, habits: Habits }[v] || { render: renderData }).render(); }
+  else { if(v === "birthdays") Birthdays.markSeen(); setHash(VIEW_HASH[v]); ({ today: Plan, school: School, homework: Homework, sleep: Sleep, birthdays: Birthdays, goals: Goals, portfolio: Portfolio, study: Study, savings: Savings, habits: Habits, settings: Settings }[v] || { render: renderData }).render(); }
   updateBadges();
   try{ window.scrollTo({top:0}); }catch(e){}
 }
@@ -1377,7 +1407,9 @@ const Attendance = window.RytmAttendance;
 const School = window.RytmSchool;
 const Records = window.RytmRecords;
 const Goals = window.RytmGoals, Portfolio = window.RytmPortfolio, Study = window.RytmStudy, Savings = window.RytmSavings, Plan = window.RytmPlan;
-const Homework = window.RytmHomework, Sleep = window.RytmSleep, Birthdays = window.RytmBirthdays;
+const Homework = window.RytmHomework, Sleep = window.RytmSleep, Birthdays = window.RytmBirthdays, Settings = window.RytmSettings;
+// "now" for the app: the phone's time, or the wall clock of the zone chosen in Ustawienia
+const appNow = () => Settings.now();
 document.addEventListener("click", e => { const b = e.target.closest("[data-goview]"); if(b) showView(b.dataset.goview); });
 // the tiles at the top of "Więcej" (never any amounts of the savings)
 // the red dot of birthdays (a week before, 2 days before, on the day) on "Więcej" and on the Urodziny tile; opening Urodziny reads it
@@ -1492,7 +1524,7 @@ function lineChart(id,items,data,{reverse=false,fmt=v=>v}={}){
 }
 // this calendar month against the previous one (swimming only)
 function monthTable(all){
-  const now=new Date(), key=d=>d.getFullYear()*12+d.getMonth(), cur=key(now), day=now.getDate();
+  const now=appNow(), key=d=>d.getFullYear()*12+d.getMonth(), cur=key(now), day=now.getDate();
   const avg=(arr,k)=>{const v=arr.map(a=>a[k]).filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null;};
   const pack=arr=>({swim:true,n:arr.length,dist:arr.reduce((s,t)=>s+(t.dist||0),0),pace:avg(arr,"pace"),eff:avg(arr,"eff"),avgHr:avg(arr,"avgHr"),swolf:avg(arr,"swolf")});
   // same days of both months, e.g. 1–6 October against 1–6 September, so a month in progress is compared fairly
@@ -1812,7 +1844,7 @@ if(window.claude && typeof window.claude.use === "function") window.claude.use("
 function currentState(){
   return { csvText, fit:{ acts:store.acts, bad:store.bad, last:store.last, hidden:store.hidden }, habits: Habits.exportState(), attendance: Attendance.exportState(), school: School.exportState(), manualRecords: Records.exportState(),
     plan: Plan.exportState(), goals: Goals.exportState(), portfolio: Portfolio.exportState(), study: Study.exportState(), savings: Savings.exportState(),
-    homework: Homework.exportState(), sleep: Sleep.exportState(), birthdays: Birthdays.exportState() };
+    homework: Homework.exportState(), sleep: Sleep.exportState(), birthdays: Birthdays.exportState(), prefs: Settings.exportState() };
 }
 function currentSummary(){ return Backup.build(currentState(), { csvRows: all.length }).summary; }
 
@@ -1870,7 +1902,7 @@ function showPreviewError(errors){
 function renderPreview(){
   const box = $("impPreview"), p = pending;
   if(!p){ box.hidden = true; box.innerHTML = ""; return; }
-  const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni (nawyki)","skippedDays"],["Oznaczone dni treningowe","cancelledTrainings"],["Nieobecności zaznaczone ręcznie","markedAbsences"],["Oceny (szkoła)","schoolGrades"],["Wyniki wpisane ręcznie (rekordy)","manualRecords"],
+  const rows = [["Treningi z plików FIT","fitTrainings"],["Treningi z listy CSV","csvTrainings"],["Usunięte treningi","hiddenTrainings"],["Nawyki","habits"],["Dni z wpisami nawyków","habitDays"],["Notatki","notes"],["Pominięte dni (nawyki)","skippedDays"],["Oznaczone dni treningowe","cancelledTrainings"],["Nieobecności zaznaczone ręcznie","markedAbsences"],["Obecności zaznaczone ręcznie (bez zegarka)","markedPresence"],["Oceny (szkoła)","schoolGrades"],["Wyniki wpisane ręcznie (rekordy)","manualRecords"],
     ["Wydarzenia w kalendarzu","planEvents"],["Cele","goals"],["Portfolio (aktywności i osiągnięcia)","portfolio"],["Działy z postępem (matura)","studyTopics"],["Oszczędzanie (zaszyfrowane)","savings"],
     ["Zadania domowe","homework"],["Zapisane noce (sen)","sleepNights"],["Urodziny","birthdays"]];
   const cell = (k, v) => k === "savings" ? (v ? "zaszyfrowane" : "–") : (v ?? "–");
@@ -2049,11 +2081,54 @@ function attendancePersist(){
   return { load: ()=>B.loadAttendance(), save: a=>B.saveAttendance(a), whenSaved: RytmData.whenSaved, writable: ()=>RytmData.mode === "normal",
     openTraining: id=>openTraining(id) };
 }
+// Ustawienia: the time zone moves "now" in every section; the language switches the screen (i18n.js)
+const CLOCKED = () => [Attendance, School, Records, Goals, Portfolio, Study, Savings, Homework, Sleep, Birthdays, Plan, Habits];
+function applyZone(){
+  const fn = ()=>Settings.now();
+  for(const m of CLOCKED()) if(m && m.setClock) m.setClock(fn);
+  zoneSet = true;
+  redrawView();
+}
+let zoneSet = false;
+function applyLang(lang){
+  if(!window.RytmI18n || RytmI18n.lang === lang) return;
+  RytmI18n.setLang(lang);
+  redrawView();
+}
+// the user's own names and texts (they stay as typed in English): subjects, habits, notes, goals, events, people, homework…
+const USER_FIELDS = new Set(["name","title","text","note","notes","desc","topic","org","role","room","subject","skips"]);
+function userStrings(){
+  const out = [];
+  const walk = (v, deep) => {
+    if(typeof v === "string"){ if(deep) out.push(v); return; }
+    if(!v || typeof v !== "object") return;
+    if(Array.isArray(v)){ for(const x of v) walk(x, deep); return; }
+    for(const [k, x] of Object.entries(v)) walk(x, deep || USER_FIELDS.has(k));
+  };
+  const H = Habits._state ? Habits._state() : null;
+  if(H) walk({ habits: (H.habits || []).map(h=>({ name: h.name, unit: h.unit })), notes: H.notes, skips: H.skips }, false);
+  // the app's own category names (Urodziny, Zawody…) are not the user's: they are translated
+  for(const m of [School, Records, Goals, Portfolio, Study, Plan, Homework, Birthdays]) { try{ const st = m.exportState(); if(m === Plan) delete st.cats; walk(st, false); }catch(e){} }
+  return out;
+}
+if(window.RytmI18n) RytmI18n.setUserStrings(userStrings);
+// draws the open view again (after the zone or the language changed)
+function redrawView(){
+  if(!curView) return;
+  if(curView === "swim") showTab(swimTab);
+  else ({ today: Plan, school: School, homework: Homework, sleep: Sleep, birthdays: Birthdays, goals: Goals, portfolio: Portfolio, study: Study, savings: Savings, habits: Habits, settings: Settings }[curView] || { render: renderData }).render();
+  if(curView === "data") renderMore();
+  updateBadges();
+}
 // (re)loads everything on the screen from the data store: at start, after the migration, an import or a recovery
 function useData(){
   demo = null; selected = null; confirmBad = false; recPool = null; $("recBanner").hidden = true;
   pending = null; renderPreview();
   loadStore();
+  Settings.attach(partPersist("prefs", { onZone: applyZone, onLang: applyLang }));
+  // a zone saved earlier (or one from a loaded backup) moves the clocks; the phone's own time needs nothing (and a zone set back to automatic: the phone's time)
+  if(Settings.tz || zoneSet) applyZone();
+  applyLang(Settings.lang);
   Attendance.attach(attendancePersist());
   School.attach(schoolPersist());
   Records.attach(recordsPersist());
@@ -2079,7 +2154,7 @@ Trainings.mount({ onDelete: deleteTraining });
 Attendance.mount();
 School.mount();
 Records.mount();
-Goals.mount(); Portfolio.mount(); Study.mount(); Savings.mount(); Plan.mount(); Homework.mount(); Sleep.mount(); Birthdays.mount();
+Goals.mount(); Portfolio.mount(); Study.mount(); Savings.mount(); Plan.mount(); Homework.mount(); Sleep.mount(); Birthdays.mount(); Settings.mount();
 $("recAdd").addEventListener("click", ()=>{ if(!demo) Records.openAdd({ pool: recPool || undefined }); });
 window.RytmApp = { useData, exportBackup };
 window.RytmApp.ready = (async ()=>{

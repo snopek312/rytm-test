@@ -109,7 +109,7 @@
     function loadSchool() { const r = store.get("meta", "school"); return r ? copy(r.data) : null; }
     const saveSchool = sc => commit(diff("meta", sc ? new Map([["school", { data: sc }]]) : new Map(), metaOnly("school")));
 
-    /* ---------- parts kept as one record each in meta: plan (Dziś), goals, portfolio, study (Nauka), savings (encrypted), homework, sleep, birthdays ---------- */
+    /* ---------- parts kept as one record each in meta: plan (Dziś), goals, portfolio, study (Nauka), savings (encrypted), homework, sleep, birthdays, prefs (Ustawienia) ---------- */
     // null = never saved
     const own = id => { if (!PARTS.includes(id)) throw new Error("nieznana część danych: " + id); return id; };
     function loadPart(id) { const r = store.get("meta", own(id)); return r ? copy(r.data) : null; }
@@ -121,7 +121,7 @@
     const saveManualRecords = m => commit(diff("meta", m ? new Map([["manualRecords", { data: m }]]) : new Map(), metaOnly("manualRecords")));
 
     /* ---------- attendance (Frekwencja): training days, start day, skipped days — one record in meta ---------- */
-    const attRecord = a => ({ days: (a.days || []).slice(), from: a.from || null, cancelled: Object.assign({}, a.cancelled || {}), absent: Object.assign({}, a.absent || {}) });
+    const attRecord = a => ({ days: (a.days || []).slice(), from: a.from || null, cancelled: Object.assign({}, a.cancelled || {}), absent: Object.assign({}, a.absent || {}), present: Object.assign({}, a.present || {}) });
     // null = never saved (the app then uses Monday to Saturday from the first swim)
     function loadAttendance() { const r = store.get("meta", "attendance"); return r ? copy(attRecord(r)) : null; }
     const saveAttendance = a => commit(diff("meta", a ? new Map([["attendance", attRecord(a)]]) : new Map(), metaOnly("attendance")));
@@ -160,7 +160,7 @@
     return { loadFit, saveFit, fitOps, loadHabits, saveHabits, habitOps, loadCsv, saveCsv, loadTimer, saveTimer, loadUndo, dropUndo, lastBackup, recordsFromBackup, loadAttendance, saveAttendance, loadSchool, saveSchool, loadManualRecords, saveManualRecords, loadPart, savePart };
   }
 
-  const PARTS = ["plan", "goals", "portfolio", "study", "savings", "homework", "sleep", "birthdays"];
+  const PARTS = ["plan", "goals", "portfolio", "study", "savings", "homework", "sleep", "birthdays", "prefs"];
   const api = { create, PARTS };
   g.RytmBridge = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

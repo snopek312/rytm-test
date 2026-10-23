@@ -16,7 +16,8 @@
   const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const fromKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
   const addDays = (k, n) => { const d = fromKey(k); d.setDate(d.getDate() + n); return dayKey(d); };
-  const todayKey = () => dayKey(new Date());
+  let clockFn = () => new Date();                      // "now" (Ustawienia → strefa czasowa can move it; 23.10.2026)
+  const todayKey = () => dayKey(clockFn());
   const dowOf = k => (fromKey(k).getDay() + 6) % 7;          // 0 = Monday
 
   // 0..1 how well the habit went; null = nothing marked
@@ -307,7 +308,7 @@
   // save=true adds the minutes to the day the stopwatch was started
   function stopTimer(save, quiet) {
     if (!timer) return;
-    const h = findH(timer.hid), ms = Date.now() - timer.start, k = dayKey(new Date(timer.start));
+    const h = findH(timer.hid), ms = Date.now() - timer.start, k = dayKey(new Date(clockFn().getTime() - ms));
     const mins = Math.round(ms / 60000);
     timer = null; const tr = saveTimer();
     if (save && h && mins > 0) {
@@ -902,6 +903,7 @@
     return ok;
   }
 
-  g.Habits = { core, mount, attach, render, exportState, importState, currentTimer, refreshStatus: () => setStatus(sync.status), _state: () => S, _setState: s => { S = s; } };
+  g.Habits = { core, mount, attach, render, exportState, importState, currentTimer, refreshStatus: () => setStatus(sync.status), setClock: fn => { clockFn = fn || (() => new Date()); },
+    _state: () => S, _setState: s => { S = s; } };
   if (typeof module !== "undefined" && module.exports) module.exports = g.Habits;
 })(typeof window !== "undefined" ? window : globalThis);

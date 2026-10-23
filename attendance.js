@@ -5,12 +5,14 @@
 //   Trening odwołany  — the training did not take place: not counted at all (neither an absence nor a skip)
 //   Choroba, Wyjazd   — skipped: not counted in the attendance, shown as "pominięte"
 //   Nie byłem         — an absence marked by hand (also on a day not known yet, or a swim that was not the training)
+//   Byłem (bez zegarka) — a training attended without the watch (no swim in the data): counts as present (18.10.2026)
 // A day marked by hand wins over a swim the watch recorded that day: the swim is listed, but not counted.
 // Days after the newest data from Garmin are "not known yet" instead of absent, until a newer export is loaded.
 // The big number is the attendance of the period of the month on screen: the school year (September – June)
 // or the summer holidays (July – August); a new school year starts from zero.
 // Saved state: {days:[1..7] (Monday = 1), from:"YYYY-MM-DD"|null (null = from the first swim),
-//               cancelled:{day: reason} (marked days, see above), absent:{day: ""} (marked absent by hand)}
+//               cancelled:{day: reason} (marked days, see above), absent:{day: ""} (marked absent by hand),
+//               present:{day: ""} (marked present by hand: a training without the watch)}
 (function (g) {
   "use strict";
 
@@ -45,9 +47,10 @@
     const days = Array.isArray(o.days) ? [...new Set(o.days.filter(d => Number.isInteger(d) && d >= 1 && d <= 7))].sort((a, b) => a - b) : DEFAULT_DAYS.slice();
     const from = typeof o.from === "string" && DAY.test(o.from) ? o.from : null;
     const map = m => { const out = {}; if (m && typeof m === "object") for (const [k, v] of Object.entries(m)) if (DAY.test(k)) out[k] = typeof v === "string" ? v : ""; return out; };
-    const cancelled = map(o.cancelled), absent = map(o.absent);
+    const cancelled = map(o.cancelled), absent = map(o.absent), present = map(o.present);
     for (const k of Object.keys(absent)) delete cancelled[k];          // one mark per day: "nie byłem" wins
-    return { days, from, cancelled, absent };
+    for (const k of Object.keys(present)) if (has(absent, k) || has(cancelled, k)) delete present[k];
+    return { days, from, cancelled, absent, present };
   }
 
   // trainings (Trainings.list()) -> swims by day, the first swim day, the newest day with any activity
@@ -66,20 +69,23 @@
     return { byDay, firstSwim: first, lastData: last };
   }
   // everything a day's status depends on
+  // (with no swims in the data at all, the first day marked "byłem" by hand starts the counting)
   function context(idx, cfg, today) {
-    return { idx, cfg, today, from: cfg.from || idx.firstSwim, until: idx.lastData };
+    const firstMark = Object.keys(cfg.present || {}).filter(k => k <= today).sort()[0] || null;
+    return { idx, cfg, today, from: cfg.from || idx.firstSwim || firstMark, until: idx.lastData };
   }
   // przed | opuszczony | zawody | odwolany | pominiety | obecny | wolne | plan | dzis | nieznany | nieobecny
   function status(k, C) {
     const tr = C.idx.byDay.get(k) || [], sched = C.cfg.days.includes(isoDow(k)), canc = has(C.cfg.cancelled, k);
     const K = canc ? kindOf(C.cfg.cancelled[k]) : null;
-    const st = s => ({ k, s, tr, sched, extra: (s === "obecny" || s === "zawody") && !sched, reason: canc ? C.cfg.cancelled[k] : null, kind: K ? K.cls : null });
+    const manual = has(C.cfg.present || {}, k) && k <= C.today;
+    const st = s => ({ k, s, tr, sched, extra: (s === "obecny" || s === "zawody") && !sched, reason: canc ? C.cfg.cancelled[k] : null, kind: K ? K.cls : null, manual: s === "obecny" && manual && !tr.length });
     if (!C.from || k < C.from) return st("przed");
     // marked by hand wins over a swim recorded that day (that swim was not the training)
     if (has(C.cfg.absent || {}, k) && sched && k <= C.today) return st("opuszczony");    // "nie byłem": an absence
     if (K && K.s === "zawody") return st("zawody");                                    // competitions: also on a day off
     if (K && sched) return st(K.s);                                                    // odwolany | pominiety
-    if (tr.length) return st("obecny");
+    if (tr.length || manual) return st("obecny");                                      // a swim, or "byłem" (without the watch)
     if (!sched) return st("wolne");
     if (k > C.today) return st("plan");
     if (k === C.today) return st("dzis");
@@ -157,7 +163,7 @@
     render();
   }
   function setTrainings(list) { trainings = list || []; render(); }
-  function exportState() { return { days: A.days.slice(), from: A.from, cancelled: Object.assign({}, A.cancelled), absent: Object.assign({}, A.absent) }; }
+  function exportState() { return { days: A.days.slice(), from: A.from, cancelled: Object.assign({}, A.cancelled), absent: Object.assign({}, A.absent), present: Object.assign({}, A.present) }; }
   // writes the whole state; the screen shows it at once, a message comes only after the store confirmed it.
   // If writing is off, the screen goes back to what is stored.
   function save(next, okText, undoTo) {
@@ -172,7 +178,7 @@
   }
 
   function cellLabel(c) {
-    if (c.s === "obecny") return c.tr.length > 1 ? `${c.tr.length}×` : c.tr[0].slot === "rano" ? "rano" : "popoł.";
+    if (c.s === "obecny") return c.manual ? "ręcz." : c.tr.length > 1 ? `${c.tr.length}×` : c.tr[0].slot === "rano" ? "rano" : "popoł.";
     if (c.s === "zawody" || c.s === "odwolany" || c.s === "pominiety") return kindOf(c.reason).label;
     if (c.s === "nieobecny") return "brak";
     if (c.s === "opuszczony") return "nieob.";
@@ -183,7 +189,7 @@
   function cellAria(c) {
     const d = parseDay(c.k);
     let s = `${fmtDay.format(d)}: ${LABEL[c.s]}`;
-    if (c.s === "obecny") s += ", " + c.tr.map(t => SLOT[t.slot]).join(" i ") + (c.extra ? ", dodatkowy" : "");
+    if (c.s === "obecny") s += (c.manual ? ", zaznaczone ręcznie (bez zegarka)" : ", " + c.tr.map(t => SLOT[t.slot]).join(" i ")) + (c.extra ? ", dodatkowy" : "");
     if (c.s === "pominiety" && c.reason) s += `: ${c.reason}`;
     if (c.s === "zawody" && c.extra) s += " (dzień poza planem, trening dodatkowy)";
     return s;
@@ -266,7 +272,7 @@
           ${A.from ? `<button type="button" class="btn link" data-fract="fromReset" ${canWrite() ? "" : "disabled"}>od pierwszego treningu</button>` : `<span class="meta">od pierwszego treningu w danych</span>`}</span></label>
         <p class="note">Trening przed ${MORNING_BEFORE}:00 liczę jako poranny, późniejszy jako popołudniowy. Liczą się treningi pływackie, inne aktywności nie.</p>
       </details>
-      <p class="note">Kalendarz uzupełnia się sam z treningów pływackich z Garmina (lista CSV i pliki FIT). Dzień treningowy bez treningu to nieobecność. Zawody liczą się jak trening. Odwołany trening nie liczy się wcale. Choroba i wyjazd to pominięte dni, które nie liczą się do frekwencji. „Nie byłem na treningu” liczy się jako nieobecność. Duża liczba to cały rok szkolny (wrzesień – czerwiec) albo wakacje (lipiec – sierpień); nowy rok szkolny liczy się od zera.</p>`;
+      <p class="note">Kalendarz uzupełnia się sam z treningów pływackich z Garmina (lista CSV i pliki FIT). Trening bez zegarka zaznaczysz w dniu: „Byłem na treningu”. Dzień treningowy bez treningu to nieobecność. Zawody liczą się jak trening. Odwołany trening nie liczy się wcale. Choroba i wyjazd to pominięte dni, które nie liczą się do frekwencji. „Nie byłem na treningu” liczy się jako nieobecność. Duża liczba to cały rok szkolny (wrzesień – czerwiec) albo wakacje (lipiec – sierpień); nowy rok szkolny liczy się od zera.</p>`;
   }
 
   function dayPanel(s, C) {
@@ -275,6 +281,8 @@
     const dis = canWrite() ? "" : "disabled";
     const swims = s.tr.length ? `<ul class="fr-trs">${s.tr.map(t => `<li><button type="button" class="btn link" data-fract="open" data-id="${esc(t.id)}">${esc(hhmm(t.date))} · ${SLOT[t.slot]}${t.dist ? ` · ${Math.round(t.dist)} m` : ""}</button> <span class="meta">${esc(t.type)}</span></li>`).join("")}</ul>` : "";
     const missBtn = (label, cls) => `<button type="button" class="${cls}" data-fract="absent" ${dis}>${label}</button>`;
+    // "byłem": a training without the watch — for a day that is over or today
+    const hereBtn = s.k <= C.today ? `<div class="actions fr-here"><button type="button" class="btn primary" data-fract="present" ${dis}>Byłem na treningu (bez zegarka)</button><span class="meta">liczy się jako obecność</span></div>` : "";
     const markBtn = r => `<button type="button" class="chip fr-r r-${kindOf(r).cls}" data-fract="skip" data-r="${esc(r)}" ${dis}>${esc(r)}</button>`;
     const skipBox = `<div class="fr-skip"><span class="meta">Oznacz ten dzień:</span>
         <div class="actions">${MARK_ORDER.map(markBtn).join("")}</div>
@@ -283,13 +291,16 @@
     const zawBox = `<div class="fr-skip"><span class="meta">Zawody w ten dzień?</span><div class="actions">${markBtn("Zawody")}</div></div>`;
     const undoMark = `<div class="actions"><button type="button" class="btn" data-fract="unskip" ${dis}>Cofnij oznaczenie</button></div>`;
     const swimNote = s.tr.length ? " Zegarek zapisał tego dnia pływanie (poniżej), ale nie liczę go osobno." : "";
-    if (s.s === "obecny") {
+    if (s.s === "obecny" && s.manual) {
+      body = `<p><strong class="fr-ok">Obecny</strong> — zaznaczone ręcznie (trening bez zegarka)${s.extra ? ", dzień poza planem, więc jako trening dodatkowy" : ""}.</p>
+        <div class="actions"><button type="button" class="btn" data-fract="unpresent" ${dis}>Cofnij zaznaczenie</button></div>${s.sched ? skipBox : zawBox}`;
+    } else if (s.s === "obecny") {
       // a swim is not always the training: competitions (races are recorded too), swimming alone on a cancelled day
       body = `<p><strong class="fr-ok">Obecny</strong>${s.extra ? " — dzień poza planem, liczę jako trening dodatkowy." : ""}</p>${swims}
         ${s.sched ? `<p class="meta">To nie był trening? ${missBtn("Nie byłem na treningu", "btn link danger-link")}</p>${skipBox}` : zawBox}`;
     } else if (s.s === "opuszczony") {
       body = `<p><strong class="fr-bad">Nie byłeś na treningu</strong> — zaznaczone przez ciebie. Liczy się jako nieobecność.${s.tr.length ? " Pływanie z tego dnia nie liczy się jako obecność:" : ""}</p>${swims}
-        <div class="actions"><button type="button" class="btn" data-fract="unabsent" ${dis}>Cofnij zaznaczenie</button></div>${skipBox}`;
+        <div class="actions"><button type="button" class="btn" data-fract="unabsent" ${dis}>Cofnij zaznaczenie</button></div>${s.tr.length ? "" : hereBtn}${skipBox}`;
     } else if (s.s === "zawody") {
       body = `<p><strong class="fr-kind r-zaw">Zawody</strong> — liczą się jak trening${s.extra ? " (dzień poza planem, więc jako trening dodatkowy)" : ""}.${swimNote}</p>${swims}${undoMark}`;
     } else if (s.s === "odwolany") {
@@ -299,17 +310,18 @@
     } else if (s.s === "przed") {
       body = `<p class="meta">Przed początkiem liczenia (${esc(fmtDay.format(parseDay(C.from)))}).${s.tr.length ? " Był trening, ale nie liczy się do frekwencji." : ""} Początek zmienisz w ustawieniach poniżej.</p>`;
     } else if (s.s === "wolne") {
-      body = `<p class="meta">Dzień bez treningu według ustawień.</p>${zawBox}`;
+      body = `<p class="meta">Dzień bez treningu według ustawień.</p>${hereBtn ? hereBtn.replace("Byłem na treningu (bez zegarka)", "Byłem na treningu (dodatkowy, bez zegarka)") : ""}${zawBox}`;
     } else {
       const why = {
         nieobecny: `<p><strong class="fr-bad">Nieobecny</strong> — w danych z Garmina nie ma treningu pływackiego z tego dnia.</p>`,
-        nieznany: `<p><strong>Jeszcze nie wiadomo</strong> — najnowsze dane z Garmina są z ${esc(fmtDay.format(parseDay(C.until)))}. Wczytaj nowy eksport, żeby uzupełnić ten dzień.</p>`,
+        nieznany: C.until ? `<p><strong>Jeszcze nie wiadomo</strong> — najnowsze dane z Garmina są z ${esc(fmtDay.format(parseDay(C.until)))}. Wczytaj nowy eksport, żeby uzupełnić ten dzień.</p>`
+          : `<p><strong>Jeszcze nie wiadomo</strong> — nie ma jeszcze danych z Garmina. Wczytaj eksport przyciskiem „+ Dodaj dane”, żeby uzupełnić ten dzień.</p>`,
         dzis: `<p><strong>Dziś</strong> — trening pojawi się po wczytaniu danych z Garmina.</p>`,
         plan: `<p class="meta">Dzień treningowy. Zawody, odwołany trening albo wyjazd możesz oznaczyć już teraz.</p>`,
       }[s.s];
       // "nie byłem": for a day that is over or today; not ahead of time, and not needed when the data already says so
       const canMiss = s.s === "nieznany" || s.s === "dzis";
-      body = why + (canMiss ? `<div class="actions">${missBtn("Nie byłem na treningu", "btn danger")}<span class="meta">liczy się jako nieobecność</span></div>` : "") + skipBox;
+      body = why + (s.s === "plan" ? "" : hereBtn) + (canMiss ? `<div class="actions">${missBtn("Nie byłem na treningu", "btn danger")}<span class="meta">liczy się jako nieobecność</span></div>` : "") + skipBox;
     }
     const ro = canWrite() ? "" : `<p class="note warn">Zapis jest wyłączony, więc teraz nie da się niczego zmienić.</p>`;
     return `<section class="panel fr-day" id="frDay" aria-live="polite"><h3>${esc(title.charAt(0).toUpperCase() + title.slice(1))}</h3>${body}${ro}</section>`;
@@ -324,14 +336,20 @@
       const d = new Date(shown.y, shown.m + (a === "next" ? 1 : -1), 1, 12); shown = { y: d.getFullYear(), m: d.getMonth() };
       sel = sel && sel.slice(0, 7) === dayKey(d).slice(0, 7) ? sel : (today().slice(0, 7) === dayKey(d).slice(0, 7) ? today() : dayKey(d));
       render();
+    } else if (a === "present") {
+      const next = exportState(); next.present[sel] = ""; delete next.absent[sel]; delete next.cancelled[sel];
+      save(next, `${fmtDay.format(parseDay(sel))}: byłem na treningu — zapisano obecność (bez zegarka).`, prev);
+    } else if (a === "unpresent") {
+      const next = exportState(); delete next.present[sel];
+      save(next, `${fmtDay.format(parseDay(sel))}: zaznaczenie obecności cofnięte.`, prev);
     } else if (a === "absent") {
-      const next = exportState(); next.absent[sel] = ""; delete next.cancelled[sel];
+      const next = exportState(); next.absent[sel] = ""; delete next.cancelled[sel]; delete next.present[sel];
       save(next, `${fmtDay.format(parseDay(sel))}: nie byłem na treningu — zapisano nieobecność.`, prev);
     } else if (a === "unabsent") {
       const next = exportState(); delete next.absent[sel];
       save(next, `${fmtDay.format(parseDay(sel))}: zaznaczenie nieobecności cofnięte.`, prev);
     } else if (a === "skip") {
-      const r = b.dataset.r || REASONS[0], next = exportState(); next.cancelled[sel] = r; delete next.absent[sel];
+      const r = b.dataset.r || REASONS[0], next = exportState(); next.cancelled[sel] = r; delete next.absent[sel]; delete next.present[sel];
       const what = { zawody: "zawody — liczą się jak trening.", odwolany: "trening odwołany — nie liczy się do frekwencji." }[kindOf(r).s] || `${r.toLowerCase()} — dzień pominięty.`;
       save(next, `${fmtDay.format(parseDay(sel))}: ${what}`, prev);
     } else if (a === "unskip") {
