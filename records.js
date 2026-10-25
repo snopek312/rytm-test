@@ -125,8 +125,9 @@
   const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmtShort = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short" });
   const fmtLong = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric" });
-  const poolTxt = p => (Math.round(p * 100) / 100).toLocaleString("pl-PL") + " m";
-  const what = e => `${e.dist} m ${(strokeOf(e.stroke) || IM).inst}`;
+  const poolTxt = p => Swim.fmtPool(p);
+  const pu = p => (Swim.poolUnit ? Swim.poolUnit(p) : "m");          // a result's distance is in its pool's unit (m or yd)
+  const what = e => `${e.dist} ${pu(e.pool)} ${(strokeOf(e.stroke) || IM).inst}`;
   const say = () => (g.Rytm && g.Rytm.notify) || { info() {}, error() {} };
 
   let S = defaults(), P = null, now = () => new Date();
@@ -157,6 +158,7 @@
   /* ---------- the form (a sheet over the screen) ---------- */
   function poolChoices() {
     const set = new Set([25, 50]);
+    if (g.RytmUnits && g.RytmUnits.yd) set.add(Math.round(25 * Swim.YD * 100) / 100);     // 25 yd, when the app shows yards
     for (const p of pools(data().acts, S).pools) set.add(p.pool);
     return [...set].sort((a, b) => a - b);
   }
@@ -180,7 +182,7 @@
       : `<div class="sc-field"><span class="k">Rodzaj</span><div class="sc-cats">${chips("kind", KINDS.map(k => [k.id, k.name]), d.kind)}</div></div>
          <div class="sc-field"><span class="k">Basen</span><div class="sc-cats">${chips("pool", poolChoices().map(p => [p, poolTxt(p)]), d.pool)}</div></div>
          <div class="sc-field"><span class="k">Styl</span><div class="sc-cats">${chips("stroke", STROKES.map(s => [s.id, s.name]), d.stroke)}</div></div>
-         <div class="sc-field"><span class="k">Dystans</span><div class="sc-cats">${chips("dist", dists.map(D => [D, D + " m"]), d.dist)}</div></div>`;
+         <div class="sc-field"><span class="k">Dystans</span><div class="sc-cats">${chips("dist", dists.map(D => [D, D + " " + pu(d.pool)]), d.dist)}</div></div>`;
     const del = d.id ? `<button type="button" class="btn danger" data-rmform="del">${fixMode ? "Usuń poprawkę" : "Usuń wynik"}</button>` : "";
     el.innerHTML = `<div class="sc-backdrop" data-rmform="close"></div><form class="panel sc-form" id="rmForm" role="dialog" aria-modal="true" aria-labelledby="rmTitle" novalidate>
       <h2 id="rmTitle">${title}</h2>${head}
@@ -199,7 +201,7 @@
   function preview() {
     const f = $("rmForm"), o = $("rmPrev"); if (!f || !o || !ui.sheet) return;
     const v = n => f.querySelector(`[name="${n}"]`).value, t = parseTime(v("m"), v("s"), v("f")), d = ui.sheet.data;
-    o.textContent = t.time ? `= ${fmtHund(t.time)} · tempo ${Swim.fmtPace(t.time, d.dist)} /100 m` : "";
+    o.textContent = t.time ? `= ${fmtHund(t.time)} · tempo ${Swim.fmtPace(t.time, d.dist)} /100 ${pu(d.pool)}` : "";
   }
   function readForm() {
     const f = $("rmForm"), d = ui.sheet.data;
@@ -230,7 +232,7 @@
     const t = parseTime(d.m, d.s, d.f);
     if (t.error) return err(t.error);
     if (d.stroke === "im" && !IM_DISTS.includes(d.dist)) return err("Styl zmienny pływa się na 100, 200 albo 400 m.");
-    if (tooFast(d.dist, t.time)) return err(`${fmtHund(t.time)} na ${d.dist} m to szybciej niż rekord świata. Sprawdź czas (minuty : sekundy , setne).`);
+    if (tooFast(d.dist * (Swim.unitLen ? Swim.unitLen(d.pool) : 1), t.time)) return err(`${fmtHund(t.time)} na ${d.dist} ${pu(d.pool)} to szybciej niż rekord świata. Sprawdź czas (minuty : sekundy , setne).`);
     if (!DAY.test(d.date || "") || d.date > today()) return err("Wybierz datę (nie później niż dziś).");
     const next = exportState(), prev = exportState();
     const rec = { id: d.id || newId(), pool: d.pool, stroke: d.stroke, dist: d.dist, time: t.time, date: d.date, kind: d.fix ? "trening" : d.kind, note: (d.note || "").trim(), fix: d.fix || null, fixTime: d.fix ? d.fixTime : null };

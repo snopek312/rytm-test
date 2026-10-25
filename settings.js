@@ -1,10 +1,12 @@
 // Rytm: Ustawienia (23.10.2026) — the language of the app (Polski / English) and the time zone of the app's "now".
 // Opened with the gear in the top right corner of "Więcej".
-// Saved state (one record in meta "prefs"): {v:1, lang:"pl"|"en", tz:""|IANA name}
+// Saved state (one record in meta "prefs"): {v:1, lang:"pl"|"en", tz:""|IANA name, units:"m"|"yd"}
 //   tz "" = automatically, the phone's own zone (the default). Another zone changes only what the app thinks "now" is:
 //   which day it is (Dziś, homework, attendance, sleep, birthdays) and the hour (the plan, the time left until bed).
 //   The times of trainings from the watch and of saved entries stay as they were saved.
 //   English: i18n.js translates the screen; the names typed in by the user stay as typed.
+//   units (25.10.2026): how distances, pace (per 100 m / 100 yd) and efficiency are shown in Pływanie; everything stays saved in
+//   metres. Records keep the unit of their pool (a 25 m pool in metres, a 25 yd pool in yards). Shown through g.RytmUnits.
 (function (g) {
   "use strict";
   const LANGS = ["pl", "en"];
@@ -16,7 +18,13 @@
     Indian: "Ocean Indyjski", Antarctica: "Antarktyda", Arctic: "Arktyka" };
   const pad = n => String(n).padStart(2, "0");
 
-  function defaults() { return { v: 1, lang: "pl", tz: "" }; }
+  function defaults() { return { v: 1, lang: "pl", tz: "", units: "m" }; }
+  const YD = 0.9144;                       // one yard in metres
+  // how a distance, a pace and an efficiency look in the chosen unit (saved values are always metres)
+  function unitsOf(u) {
+    const yd = u === "yd";
+    return { yd, u: () => (yd ? "yd" : "m"), d: m => (m == null ? m : yd ? m / YD : m), pace: s => (s == null ? s : yd ? s * YD : s), eff: e => (e == null ? e : yd ? e / YD : e) };
+  }
   const fmts = new Map();
   function fmtOf(tz) {
     if (fmts.has(tz)) return fmts.get(tz);
@@ -27,7 +35,7 @@
   const validZone = tz => typeof tz === "string" && tz.length > 0 && tz.length <= 64 && !!fmtOf(tz);
   function normalize(o) {
     o = o && typeof o === "object" && !Array.isArray(o) ? o : {};
-    return { v: 1, lang: LANGS.includes(o.lang) ? o.lang : "pl", tz: validZone(o.tz) ? o.tz : "" };
+    return { v: 1, lang: LANGS.includes(o.lang) ? o.lang : "pl", tz: validZone(o.tz) ? o.tz : "", units: o.units === "yd" ? "yd" : "m" };
   }
   // the wall clock in tz at the moment d: {year, month, day, hour, minute, second} or null
   function parts(tz, d) {
@@ -71,7 +79,7 @@
     return zoneCache;
   }
 
-  const core = { LANGS, REGIONS, defaults, normalize, validZone, parts, zoneNow, offsetMin, utcLabel, phoneZone, zones };
+  const core = { LANGS, REGIONS, YD, unitsOf, defaults, normalize, validZone, parts, zoneNow, offsetMin, utcLabel, phoneZone, zones };
 
   /* ================= view ================= */
   const doc = g.document;
@@ -112,6 +120,11 @@
           <button type="button" class="seg-b" data-setact="lang" data-v="pl" lang="pl" aria-pressed="${S.lang === "pl"}" ${dis}>Polski</button>
           <button type="button" class="seg-b" data-setact="lang" data-v="en" lang="en" aria-pressed="${S.lang === "en"}" ${dis}>English</button></div>
         <p class="meta">Nazwy, które wpisujesz sam (przedmioty, nawyki, cele, osoby), zostają tak, jak je wpisałeś.</p></section>
+      <section class="panel set-units" aria-labelledby="setUnT"><h2 id="setUnT">Jednostki</h2>
+        <div class="seg" role="group" aria-labelledby="setUnT">
+          <button type="button" class="seg-b" data-setact="units" data-v="m" aria-pressed="${S.units === "m"}" ${dis}>Metry</button>
+          <button type="button" class="seg-b" data-setact="units" data-v="yd" aria-pressed="${S.units === "yd"}" ${dis}>Jardy</button></div>
+        <p class="meta">Zmienia, jak pokazuje się dystans, tempo (na 100 m albo 100 yd) i efektywność w Pływaniu. Rekordy są w jednostkach basenu: basen 25 m w metrach, basen 25 yd w jardach. Treningi z basenów w jardach wczytują się z plików FIT tak samo jak inne.</p></section>
       <section class="panel set-tz" aria-labelledby="setTzT"><h2 id="setTzT">Strefa czasowa</h2>
         <label class="sc-field"><span class="k">Czas w aplikacji</span><select name="tz" data-setzone ${dis}>
           <option value=""${S.tz ? "" : " selected"}>Automatycznie — z telefonu${phone ? ` · ${esc(zoneName(phone))}` : ""}</option>
@@ -128,6 +141,11 @@
       save(next, next.lang === "en" ? "Język: English." : "Język: polski.");
       if (P && P.onLang) try { P.onLang(S.lang); } catch (x) {}
     }
+    if (b.dataset.setact === "units" && b.dataset.v !== S.units) {
+      const next = exportState(); next.units = b.dataset.v === "yd" ? "yd" : "m";
+      save(next, next.units === "yd" ? "Jednostki: jardy." : "Jednostki: metry.");
+      if (P && P.onUnits) try { P.onUnits(S.units); } catch (x) {}
+    }
   }
   function onChange(e) {
     const el = e.target; if (!el.dataset || el.dataset.setzone === undefined || !canWrite()) return;
@@ -139,11 +157,15 @@
   // the base clock (the real time; tests set a made-up one); the app's "now" is that moment in the chosen zone
   function setClock(fn) { base = fn || (() => new Date()); }
   function summary() { return `${S.lang === "en" ? "English" : "Polski"} · ${S.tz ? zoneName(S.tz) : "strefa z telefonu"}`; }
+  // the unit helper for the other parts (trainings, the overview, attendance): always the saved choice
+  const live = { get yd() { return S.units === "yd"; }, u: () => unitsOf(S.units).u(), d: m => unitsOf(S.units).d(m), pace: s => unitsOf(S.units).pace(s), eff: e => unitsOf(S.units).eff(e) };
+  g.RytmUnits = live;
 
   const api = Object.assign({}, core, { attach, render, mount, exportState, setClock, summary, now, canWrite });
   Object.defineProperty(api, "state", { get: exportState, enumerable: true });
   Object.defineProperty(api, "lang", { get: () => S.lang, enumerable: true });
   Object.defineProperty(api, "tz", { get: () => S.tz, enumerable: true });
+  Object.defineProperty(api, "units", { get: () => S.units, enumerable: true });
   g.RytmSettings = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

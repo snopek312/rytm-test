@@ -4,14 +4,14 @@
 //     swimCsv: {text} | null,                         // the Garmin activities CSV as it was loaded
 //     fit:     {acts:{id:packed}, bad:{id:[i]}, last:[id], hidden:{trainingId: deletedAtISO}},
 //     habits:  {habits:[...], log:{day:{habitId:value}}, notes:{day:text}, skips:{day:reason}},
-//     attendance: {days:[1..7], from:day|null, cancelled:{day:reason}, absent:{day:""}, present:{day:""}}   // optional, since 16.10.2026 (present: 23.10.2026);
+//     attendance: {days:[1..7], from:day|null, cancelled:{day:reason}, absent:{day:""}, present:{day:""}, notComp:{trainingId:""}}   // optional, since 16.10.2026 (present: 23.10.2026, notComp: 25.10.2026);
 //     school: {v:1, subjects:[...], grades:[{id,sid,pct,w,cat,desc,date,...}], tests:[...], settings:{...}}   // optional, 16.10.2026;
 //     manualRecords: {v:1, entries:[{id,pool,stroke,dist,time,date,kind,note,fix,fixTime}]}   // optional, 17.10.2026;
 //     plan: {v:1, bells, lessons, events, cats}, goals: {v:1, seeded, goals}, portfolio: {v:1, activities, awards},
 //     study: {v:1, maturaDate, subjects, tests, current}, savings: {v:1, box, old}  (savings: encrypted with the user's PIN)   // optional, 17.10.2026;
 //     homework: {v:1, items:[{id,sid,text,due,done,doneAt,added}]}, sleep: {v:1, bed, hours, nights:[{date,bed,wake}]},
 //     birthdays: {v:1, people:[{id,name,day,month,year,note,ideas:[{id,text,got}]}]}   // optional, 18.10.2026;
-//     prefs: {v:1, lang:"pl"|"en", tz:""|zone}   // Ustawienia: the language and the time zone; optional, 23.10.2026;
+//     prefs: {v:1, lang:"pl"|"en", tz:""|zone, units:"m"|"yd"}   // Ustawienia: language, time zone, units; optional, 23.10.2026 (units: 25.10.2026);
 //   } }                                                                  // older versions ignore it, so it stays format 1
 (function (g) {
   "use strict";
@@ -67,7 +67,7 @@
       fit: { acts: state.fit.acts || {}, bad: state.fit.bad || {}, last: state.fit.last || [], hidden: state.fit.hidden || {} },
       habits: { habits: state.habits.habits || [], log: state.habits.log || {}, notes: state.habits.notes || {}, skips: state.habits.skips || {} },
     };
-    if (state.attendance) data.attendance = { days: state.attendance.days || [], from: state.attendance.from || null, cancelled: state.attendance.cancelled || {}, absent: state.attendance.absent || {}, present: state.attendance.present || {} };
+    if (state.attendance) data.attendance = { days: state.attendance.days || [], from: state.attendance.from || null, cancelled: state.attendance.cancelled || {}, absent: state.attendance.absent || {}, present: state.attendance.present || {}, notComp: state.attendance.notComp || {} };
     if (state.school) data.school = state.school;
     if (state.manualRecords) data.manualRecords = state.manualRecords;
     for (const p of PARTS) if (state[p]) data[p] = state[p];
@@ -153,6 +153,7 @@
         for (const [k, v] of Object.entries(a.cancelled)) if (!DAY.test(k) || typeof v !== "string") { errors.push("Lista pominiętych treningów ma zły format."); break; }
         if (a.absent !== undefined && (!isObj(a.absent) || !Object.entries(a.absent).every(([k, v]) => DAY.test(k) && typeof v === "string"))) errors.push("Lista nieobecności ma zły format.");
         if (a.present !== undefined && (!isObj(a.present) || !Object.entries(a.present).every(([k, v]) => DAY.test(k) && typeof v === "string"))) errors.push("Lista obecności zaznaczonych ręcznie ma zły format.");
+        if (a.notComp !== undefined && (!isObj(a.notComp) || !Object.values(a.notComp).every(v => typeof v === "string"))) errors.push("Lista treningów „nie z zawodów” ma zły format.");
       }
     }
     // school (optional): the shape only; the app cleans the details when it loads it
@@ -178,7 +179,7 @@
     part("homework", "zadania domowe", v => Array.isArray(v.items) && v.items.every(x => isObj(x) && typeof x.id === "string" && typeof x.text === "string"));
     part("sleep", "sen", v => Array.isArray(v.nights) && v.nights.every(isObj));
     part("birthdays", "urodziny", v => Array.isArray(v.people) && v.people.every(x => isObj(x) && typeof x.id === "string" && typeof x.name === "string"));
-    part("prefs", "ustawienia", v => (v.lang === undefined || typeof v.lang === "string") && (v.tz === undefined || typeof v.tz === "string"));
+    part("prefs", "ustawienia", v => (v.lang === undefined || typeof v.lang === "string") && (v.tz === undefined || typeof v.tz === "string") && (v.units === undefined || typeof v.units === "string"));
     part("study", "nauka", v => Array.isArray(v.subjects) && Array.isArray(v.tests) && (v.current === undefined || (isObj(v.current) && (v.current.topics === undefined || Array.isArray(v.current.topics)) && (v.current.sessions === undefined || Array.isArray(v.current.sessions)))));
     part("savings", "oszczędzanie", v => (v.box === null || box(v.box)) && Array.isArray(v.old) && v.old.every(box));
     const uniq = [...new Set(errors)];

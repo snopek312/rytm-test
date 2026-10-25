@@ -43,7 +43,7 @@
   const dateRe = words(Object.keys(DATE_WORDS).sort((a, b) => b.length - a.length));
   const numRe = new RegExp(`(^|[^${L}])(\\d+(?:[.,:/–-]\\d+)*(?:[\\u00a0\\u202f ]\\d{3}(?!\\d))*(?:,\\d+)?)(?![${L}])`, "gu");
   // kept exactly as they are: the app's version, time zones (Europe/Warsaw), file names (kopia.json, B.zip)
-  const codeRe = new RegExp(`(^|[^${L}])(\\d{4}\\.\\d{2}\\.\\d{2}-[\\w-]+|[A-Z][a-z]+/[A-Za-z_/-]+|[\\w-]+(?:\\.[\\w-]+)*\\.(?:zip|fit|FIT|json|csv|CSV|txt|bin))(?![${L}])`, "gu");
+  const codeRe = new RegExp(`(^|[^${L}])(\\d{4}\\.\\d{2}\\.\\d{2}-[\\w-]+|[A-Z][a-z]+/[A-Za-z_/-]+(?: [A-Z][a-z]+)*|[\\w-]+(?:\\.[\\w-]+)*\\.(?:zip|fit|FIT|json|csv|CSV|txt|bin))(?![${L}])`, "gu");
   const LETTER = /\p{L}/u;
 
   /* ---------- state ---------- */

@@ -20,6 +20,13 @@
   const STROKE_FACTOR = { free: 1, back: 1.12, breast: 1.25, fly: 1.08 };   // typical time vs freestyle
   const FAST_RATIO = 0.6, STROKES_RATIO = 0.55;
   const MAX_GAP_MS = 3000; // a longer pause between two lengths ends a continuous swim
+  // Pools measured in yards (25.10.2026): a FIT file always keeps the pool length in metres (25 yd = 22.86 m) and says
+  // "statute" for yards. Such a pool keeps its length in metres (so distances and pace stay right), and its records are
+  // in yards: 25, 50, 100… yd = 1, 2, 4… lengths. A yard pool is known by its length: a whole number of yards, not of metres.
+  const YD = 0.9144;
+  const isYardPool = p => { const r = Math.round(p * 100) / 100, y = r / YD; return Math.abs(r - Math.round(r)) > 0.005 && Math.abs(y - Math.round(y)) < 0.01; };
+  const poolUnit = p => (isYardPool(p) ? "yd" : "m");
+  const unitLen = p => (isYardPool(p) ? YD : 1);         // metres in one unit of the pool's own distances
 
   // ---------- reading files ----------
 
@@ -63,7 +70,6 @@
     if (!lengths.length) return { skipped: "noLengths", sport };
     const ses = sessions.find(s => s.poolLength) || sessions[0];
     if (!ses || !ses.poolLength) return { skipped: "noPool", sport };
-    if (ses.poolLengthUnit && ses.poolLengthUnit !== "metric") return { skipped: "yards" };
     const pool = Math.round(ses.poolLength * 100) / 100;
     const start = +(ses.startTime || lengths[0].startTime || lengths[0].timestamp);
     // what the file itself says about the pool, kept so the pool length can be checked later
@@ -171,11 +177,12 @@
   //   unverified  unit is metres but the file has no totals to compare with
   //   mismatch    the file's totals do not match lengths × pool length  -> left out of records
   //   no-unit     the file does not say metres or yards                 -> left out of records
+  // (yards — "statute" — are checked the same way: the file's totals are in metres too)
   function poolCheck(act) {
     const n = act.lengths.filter(l => l.s !== "idle").length;
     const src = act.poolSrc;
     if (src) {
-      if (src.unit !== "metric") return { status: "no-unit", n };
+      if (src.unit !== "metric" && src.unit !== "statute") return { status: "no-unit", n };
       const checks = [];
       if (src.active != null) checks.push(src.active === n);
       if (src.dist != null) checks.push(Math.abs(src.dist - n * src.len) <= Math.max(1, src.dist * 0.01));
@@ -188,7 +195,7 @@
     return { status: Math.abs(d - n * act.pool) <= Math.max(1, d * 0.01) ? "unverified" : "mismatch", n, fileDist: d };
   }
   const poolTrusted = act => { const s = poolCheck(act).status; return s === "ok" || s === "unverified"; };
-  const fmtPool = p => (Math.round(p * 100) / 100).toLocaleString("pl-PL") + " m";
+  const fmtPool = p => (isYardPool(p) ? Math.round(p / YD) + " yd" : (Math.round(p * 100) / 100).toLocaleString("pl-PL") + " m");
   // pools that have trusted activities, and activities left out of records with the reason
   function poolsOf(acts) {
     const count = new Map(), excluded = [];
@@ -208,7 +215,7 @@
     for (const run of runsOf(act, badSet)) {
       const times = run.idx.map(i => act.lengths[i].t);
       for (const D of DISTANCES) {
-        const nf = D / act.pool, n = Math.round(nf);
+        const nf = D * unitLen(act.pool) / act.pool, n = Math.round(nf);       // D in the pool's own unit
         if (n < 1 || Math.abs(nf - n) > 1e-6 || times.length < n) continue;
         let sum = 0;
         for (let k = 0; k < n; k++) sum += times[k];
@@ -280,7 +287,7 @@
   }
 
   const api = { DISTANCES, STROKES, expandFiles, parseFit, runsOf, suspicious, bestInActivity, computeRecords, diffRecords, pack, unpack, fmtTime, fmtPace,
-    poolCheck, poolTrusted, poolsOf, recKey, fmtPool };
+    poolCheck, poolTrusted, poolsOf, recKey, fmtPool, YD, isYardPool, poolUnit, unitLen };
   g.Swim = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

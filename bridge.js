@@ -121,7 +121,7 @@
     const saveManualRecords = m => commit(diff("meta", m ? new Map([["manualRecords", { data: m }]]) : new Map(), metaOnly("manualRecords")));
 
     /* ---------- attendance (Frekwencja): training days, start day, skipped days — one record in meta ---------- */
-    const attRecord = a => ({ days: (a.days || []).slice(), from: a.from || null, cancelled: Object.assign({}, a.cancelled || {}), absent: Object.assign({}, a.absent || {}), present: Object.assign({}, a.present || {}) });
+    const attRecord = a => ({ days: (a.days || []).slice(), from: a.from || null, cancelled: Object.assign({}, a.cancelled || {}), absent: Object.assign({}, a.absent || {}), present: Object.assign({}, a.present || {}), notComp: Object.assign({}, a.notComp || {}) });
     // null = never saved (the app then uses Monday to Saturday from the first swim)
     function loadAttendance() { const r = store.get("meta", "attendance"); return r ? copy(attRecord(r)) : null; }
     const saveAttendance = a => commit(diff("meta", a ? new Map([["attendance", attRecord(a)]]) : new Map(), metaOnly("attendance")));

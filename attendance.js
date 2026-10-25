@@ -12,7 +12,10 @@
 // or the summer holidays (July – August); a new school year starts from zero.
 // Saved state: {days:[1..7] (Monday = 1), from:"YYYY-MM-DD"|null (null = from the first swim),
 //               cancelled:{day: reason} (marked days, see above), absent:{day: ""} (marked absent by hand),
-//               present:{day: ""} (marked present by hand: a training without the watch)}
+//               present:{day: ""} (marked present by hand: a training without the watch),
+//               notComp:{trainingId: ""} (a workout from a competition day that is not the competition itself, 25.10.2026)}
+// A workout from a day marked "Zawody" shows a "zawody" tag in Pływanie → Treningi; the watch may not be allowed at the
+// competition, so a workout can be marked "to nie jest zapis z zawodów" (notComp) and loses the tag.
 (function (g) {
   "use strict";
 
@@ -50,7 +53,9 @@
     const cancelled = map(o.cancelled), absent = map(o.absent), present = map(o.present);
     for (const k of Object.keys(absent)) delete cancelled[k];          // one mark per day: "nie byłem" wins
     for (const k of Object.keys(present)) if (has(absent, k) || has(cancelled, k)) delete present[k];
-    return { days, from, cancelled, absent, present };
+    const notComp = {};
+    if (o.notComp && typeof o.notComp === "object") for (const k of Object.keys(o.notComp)) if (/^[cf]\d{1,16}$/.test(k)) notComp[k] = "";
+    return { days, from, cancelled, absent, present, notComp };
   }
 
   // trainings (Trainings.list()) -> swims by day, the first swim day, the newest day with any activity
@@ -163,7 +168,17 @@
     render();
   }
   function setTrainings(list) { trainings = list || []; render(); }
-  function exportState() { return { days: A.days.slice(), from: A.from, cancelled: Object.assign({}, A.cancelled), absent: Object.assign({}, A.absent), present: Object.assign({}, A.present) }; }
+  function exportState() { return { days: A.days.slice(), from: A.from, cancelled: Object.assign({}, A.cancelled), absent: Object.assign({}, A.absent), present: Object.assign({}, A.present), notComp: Object.assign({}, A.notComp) }; }
+  // a workout (Trainings.list() item) from a competition day; notComp: marked "not the competition"
+  const compDay = t => !!(t && t.swim && t.date instanceof Date && A.cancelled[dayKey(t.date)] === "Zawody");
+  const compOf = t => compDay(t) && !has(A.notComp, t.id);
+  function setNotComp(id, on) {
+    if (!canWrite() || typeof id !== "string") return false;
+    const prev = exportState(), next = exportState();
+    if (on) next.notComp[id] = ""; else delete next.notComp[id];
+    save(next, on ? "Ten trening nie jest już oznaczony jako zawody." : "Trening znowu oznaczony jako zawody.", prev);
+    return true;
+  }
   // writes the whole state; the screen shows it at once, a message comes only after the store confirmed it.
   // If writing is off, the screen goes back to what is stored.
   function save(next, okText, undoTo) {
@@ -279,7 +294,7 @@
     const d = parseDay(s.k), title = fmtLong.format(d);
     let body = "";
     const dis = canWrite() ? "" : "disabled";
-    const swims = s.tr.length ? `<ul class="fr-trs">${s.tr.map(t => `<li><button type="button" class="btn link" data-fract="open" data-id="${esc(t.id)}">${esc(hhmm(t.date))} · ${SLOT[t.slot]}${t.dist ? ` · ${Math.round(t.dist)} m` : ""}</button> <span class="meta">${esc(t.type)}</span></li>`).join("")}</ul>` : "";
+    const swims = s.tr.length ? `<ul class="fr-trs">${s.tr.map(t => `<li><button type="button" class="btn link" data-fract="open" data-id="${esc(t.id)}">${esc(hhmm(t.date))} · ${SLOT[t.slot]}${t.dist ? ` · ${Math.round(g.RytmUnits ? g.RytmUnits.d(t.dist) : t.dist)} ${g.RytmUnits ? g.RytmUnits.u() : "m"}` : ""}</button> <span class="meta">${esc(t.type)}</span></li>`).join("")}</ul>` : "";
     const missBtn = (label, cls) => `<button type="button" class="${cls}" data-fract="absent" ${dis}>${label}</button>`;
     // "byłem": a training without the watch — for a day that is over or today
     const hereBtn = s.k <= C.today ? `<div class="actions fr-here"><button type="button" class="btn primary" data-fract="present" ${dis}>Byłem na treningu (bez zegarka)</button><span class="meta">liczy się jako obecność</span></div>` : "";
@@ -382,7 +397,7 @@
   // tests only: a fixed "now"
   function setClock(fn) { now = fn || (() => new Date()); shown = null; sel = null; }
 
-  const api = Object.assign({}, core, { attach, setTrainings, exportState, render, mount, setClock });
+  const api = Object.assign({}, core, { attach, setTrainings, exportState, render, mount, setClock, compDay, compOf, setNotComp, canWrite });
   Object.defineProperty(api, "state", { get: exportState, enumerable: true });   // live (Object.assign would copy the value once)
   g.RytmAttendance = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
