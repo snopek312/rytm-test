@@ -12,13 +12,14 @@
 //     homework: {v:1, items:[{id,sid,text,due,done,doneAt,added}]}, sleep: {v:1, bed, hours, nights:[{date,bed,wake}]},
 //     birthdays: {v:1, people:[{id,name,day,month,year,note,ideas:[{id,text,got}]}]}   // optional, 18.10.2026;
 //     prefs: {v:1, lang:"pl"|"en", tz:""|zone, units:"m"|"yd"}   // Ustawienia: language, time zone, units; optional, 23.10.2026 (units: 25.10.2026);
+//     swim: {v:1, hrMax:number|null, css:[{id,date,t400,t200}], goals:[{id,stroke,dist,pool,time,by,note}], born:year|null}   // Pływanie → Analiza; optional, 27.10.2026;
 //   } }                                                                  // older versions ignore it, so it stays format 1
 (function (g) {
   "use strict";
   const FORMAT = 1;
   const HABIT_TYPES = ["count", "bool", "amount", "time"];
   const DAY = /^\d{4}-\d{2}-\d{2}$/;
-  const PARTS = ["plan", "goals", "portfolio", "study", "savings", "homework", "sleep", "birthdays", "prefs"];
+  const PARTS = ["plan", "goals", "portfolio", "study", "savings", "homework", "sleep", "birthdays", "prefs", "swim"];
   const isObj = v => v !== null && typeof v === "object" && !Array.isArray(v);
 
   // FNV-1a over the UTF-16 code units: detects a cut-off or hand-edited file (not a security measure)
@@ -50,6 +51,7 @@
       homework: ((data.homework && data.homework.items) || []).length,
       sleepNights: ((data.sleep && data.sleep.nights) || []).length,
       birthdays: ((data.birthdays && data.birthdays.people) || []).length,
+      swimTests: ((data.swim && data.swim.css) || []).length + ((data.swim && data.swim.goals) || []).length,
       goals: ((data.goals && data.goals.goals) || []).length,
       portfolio: ((data.portfolio && data.portfolio.activities) || []).length + ((data.portfolio && data.portfolio.awards) || []).length,
       studyTopics: ((data.study && data.study.subjects) || []).reduce((a, s) => a + ((s && s.topics) || []).filter(t => t && t.st > 0).length, 0)
@@ -179,6 +181,8 @@
     part("homework", "zadania domowe", v => Array.isArray(v.items) && v.items.every(x => isObj(x) && typeof x.id === "string" && typeof x.text === "string"));
     part("sleep", "sen", v => Array.isArray(v.nights) && v.nights.every(isObj));
     part("birthdays", "urodziny", v => Array.isArray(v.people) && v.people.every(x => isObj(x) && typeof x.id === "string" && typeof x.name === "string"));
+    part("swim", "analiza pływania", v => (v.hrMax === undefined || v.hrMax === null || typeof v.hrMax === "number") && (v.born === undefined || v.born === null || typeof v.born === "number") && Array.isArray(v.css) && Array.isArray(v.goals)
+      && v.css.every(x => isObj(x) && typeof x.id === "string" && typeof x.t400 === "number" && typeof x.t200 === "number") && v.goals.every(x => isObj(x) && typeof x.id === "string" && typeof x.time === "number"));
     part("prefs", "ustawienia", v => (v.lang === undefined || typeof v.lang === "string") && (v.tz === undefined || typeof v.tz === "string") && (v.units === undefined || typeof v.units === "string"));
     part("study", "nauka", v => Array.isArray(v.subjects) && Array.isArray(v.tests) && (v.current === undefined || (isObj(v.current) && (v.current.topics === undefined || Array.isArray(v.current.topics)) && (v.current.sessions === undefined || Array.isArray(v.current.sessions)))));
     part("savings", "oszczędzanie", v => (v.box === null || box(v.box)) && Array.isArray(v.old) && v.old.every(box));
@@ -208,6 +212,7 @@
     lost("homework", "Zadania domowe");
     lost("sleepNights", "Zapisane noce (sen)");
     lost("birthdays", "Urodziny");
+    lost("swimTests", "Testy CSS i cele startowe (analiza pływania)");
     if ((current.savings || 0) > (incoming.savings || 0)) out.push("Oszczędzanie: na urządzeniu są zaszyfrowane dane, a w kopii ich nie ma.");
     if (current.lastDay && incoming.lastDay && incoming.lastDay < current.lastDay)
       out.push(`Najnowsze dane w kopii są z ${incoming.lastDay}, a na urządzeniu z ${current.lastDay}.`);

@@ -138,7 +138,34 @@
       out.push(Object.assign(status(k, C), { inMonth: k >= first && k <= last }));
     return out;
   }
-  const core = { DAY, DEFAULT_DAYS, MORNING_BEFORE, REASONS, MARK_ORDER, KINDS, kindOf, periodOf, dayKey, parseDay, addDays, isoDow, slotOf, normalize, index, context, status, tally, streak, monthGrid };
+  // the numbers for Pływanie → Analiza (27.10.2026): the period (school year or holidays), this month, the last 14 and 28 days and the
+  // 28 before them, the streak, the longest run of absences in the last 28 days, days since the last training attended, and the
+  // training days still ahead in the period (today too while it has no swim yet; days already marked as cancelled or skipped are left out)
+  function statsOf(C) {
+    const T = C.today; if (!C.from) return null;
+    const per = periodOf(T), tl = (a, b) => tally(a, b, C);
+    let run = 0, longest = 0, since = null, remaining = 0;
+    for (let k = addDays(T, -27); k <= T; k = addDays(k, 1)) {
+      const st = status(k, C).s;
+      if (st === "nieobecny" || st === "opuszczony") { run++; if (run > longest) longest = run; }
+      else if (st === "obecny" || st === "zawody") run = 0;
+    }
+    for (let i = 0; i <= 120; i++) { const st = status(addDays(T, -i), C).s; if (st === "obecny" || st === "zawody") { since = i; break; } }
+    for (let k = T; k <= per.end; k = addDays(k, 1)) { const st = status(k, C).s; if (st === "plan" || st === "dzis") remaining++; }
+    // the period so far: the absences (days) and each weekday's planned trainings and absences
+    const absentDays = [], byDow = {};
+    for (let k = per.start < C.from ? C.from : per.start; k <= T; k = addDays(k, 1)) {
+      const st = status(k, C), w = isoDow(k);
+      if (!st.sched || st.extra || !["obecny", "zawody", "nieobecny", "opuszczony"].includes(st.s)) continue;
+      const b = byDow[w] || (byDow[w] = { planned: 0, absent: 0 });
+      b.planned++;
+      if (st.s === "nieobecny" || st.s === "opuszczony") { b.absent++; absentDays.push(k); }
+    }
+    return { today: T, from: C.from, until: C.until, season: Object.assign(tl(per.start, per.end), { label: per.label, kind: per.kind, start: per.start, end: per.end }),
+      month: tl(T.slice(0, 8) + "01", T), last14: tl(addDays(T, -13), T), last28: tl(addDays(T, -27), T), prev28: tl(addDays(T, -55), addDays(T, -28)),
+      streak: streak(C), absentRun: longest, sincePresent: since, remaining, absentDays, byDow };
+  }
+  const core = { DAY, DEFAULT_DAYS, MORNING_BEFORE, REASONS, MARK_ORDER, KINDS, kindOf, periodOf, dayKey, parseDay, addDays, isoDow, slotOf, normalize, index, context, status, tally, streak, monthGrid, statsOf };
 
   /* ================= view ================= */
   const doc = g.document;
@@ -172,6 +199,8 @@
   // a workout (Trainings.list() item) from a competition day; notComp: marked "not the competition"
   const compDay = t => !!(t && t.swim && t.date instanceof Date && A.cancelled[dayKey(t.date)] === "Zawody");
   const compOf = t => compDay(t) && !has(A.notComp, t.id);
+  // the numbers for Pływanie → Analiza (27.10.2026): see statsOf (core)
+  function stats() { return statsOf(ctx()); }
   function setNotComp(id, on) {
     if (!canWrite() || typeof id !== "string") return false;
     const prev = exportState(), next = exportState();
@@ -397,7 +426,7 @@
   // tests only: a fixed "now"
   function setClock(fn) { now = fn || (() => new Date()); shown = null; sel = null; }
 
-  const api = Object.assign({}, core, { attach, setTrainings, exportState, render, mount, setClock, compDay, compOf, setNotComp, canWrite });
+  const api = Object.assign({}, core, { attach, setTrainings, exportState, render, mount, setClock, compDay, compOf, setNotComp, canWrite, stats });
   Object.defineProperty(api, "state", { get: exportState, enumerable: true });   // live (Object.assign would copy the value once)
   g.RytmAttendance = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

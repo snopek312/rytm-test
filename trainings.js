@@ -168,7 +168,7 @@
   /* ================= UI ================= */
   let list = [], openId = null, axis = "dist", charts = {}, onOpenChange = null;
   let view = "list";                // list (swimming) | others (recreational activities)
-  let confirmDel = null, onDelete = null;
+  let confirmDel = null, onDelete = null, coachBlock = null;
   // competition days (Frekwencja → "Zawody"): opts.compDay(t) — the day is one, opts.comp(t) — the workout counts as the competition,
   // opts.setNotComp(id, on) — "to nie jest zapis z zawodów" (25.10.2026)
   let compOpts = {};
@@ -314,6 +314,8 @@
           ${cmp.map(c => `<tr><th scope="row">${c.label}</th><td class="num">${esc(c.fmt(c.cur))}</td><td class="num muted">${esc(c.fmt(c.prev))}</td><td>${deltaChip(c)}</td></tr>`).join("")}
         </tbody></table></div>` : ""}
       </section>`;
+    // Pływanie → Analiza (27.10.2026): the coach's comments, zones, technique and sets of this workout
+    if (coachBlock) { try { html += coachBlock(t) || ""; } catch (e) {} }
     if (t.fit) {
       const ivs = intervals(t.fit);
       const used = [...new Set(t.fit.lengths.filter(l => STROKE_VAR[l.s]).map(l => l.s))];
@@ -525,6 +527,7 @@
     onOpenChange = opts.onOpenChange || null;
     onDelete = opts.onDelete || null;
     compOpts = { comp: opts.comp, compDay: opts.compDay, setNotComp: opts.setNotComp, canWrite: opts.canMark };
+    coachBlock = opts.coach || null;
     const root = $("trRoot"); if (!root) return;
     const sh = $("trSheet");
     if (sh) { sh.addEventListener("click", onBigClick); sh.addEventListener("change", onBigChange); }

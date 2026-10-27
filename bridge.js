@@ -160,7 +160,7 @@
     return { loadFit, saveFit, fitOps, loadHabits, saveHabits, habitOps, loadCsv, saveCsv, loadTimer, saveTimer, loadUndo, dropUndo, lastBackup, recordsFromBackup, loadAttendance, saveAttendance, loadSchool, saveSchool, loadManualRecords, saveManualRecords, loadPart, savePart };
   }
 
-  const PARTS = ["plan", "goals", "portfolio", "study", "savings", "homework", "sleep", "birthdays", "prefs"];
+  const PARTS = ["plan", "goals", "portfolio", "study", "savings", "homework", "sleep", "birthdays", "prefs", "swim"];
   const api = { create, PARTS };
   g.RytmBridge = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

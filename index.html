@@ -500,6 +500,90 @@ body.sc-sheet-open{overflow:hidden}
 .sc-err{color:var(--bad);font-weight:600;margin:0;min-height:1em}
 .sc-err:empty{min-height:0}
 #frRoot{display:flex;flex-direction:column;gap:18px}
+/* Pływanie → Analiza (27.10.2026) */
+.swimtabs.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:520px){.swimtabs.five .tab{font-size:.9rem;padding:8px 1px;letter-spacing:0}}
+#anRoot{display:flex;flex-direction:column;gap:18px}
+.an-head{display:flex;gap:16px;align-items:center}
+.an-mark{flex:none;width:96px;height:96px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:2px solid var(--line);background:var(--surface)}
+.an-mark b{font-family:var(--f-display);font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.an-mark small{font-size:.72rem;color:var(--muted);text-align:center;line-height:1.1;padding:0 4px}
+.an-mark.g1,.an-mark.g2{border-color:var(--bad);color:var(--bad)}
+.an-mark.g3{border-color:var(--rope);color:var(--gold-word)}
+.an-mark.g4{border-color:var(--accent);color:var(--accent)}
+.an-mark.g5,.an-mark.g6{border-color:var(--good);color:var(--good)}
+.an-counts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.an-n{font-size:.78rem;padding:3px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.an-n.zle{border-color:var(--bad);color:var(--bad)} .an-n.slabo{border-color:var(--h5);color:var(--h5)}
+.an-n.popraw{border-color:var(--rope);color:var(--gold-word)} .an-n.dobrze{border-color:var(--good);color:var(--good)}
+.an-parts{display:grid;gap:6px;margin:14px 0 4px}
+.an-part{display:grid;grid-template-columns:minmax(0,150px) 1fr 30px;gap:8px;align-items:center;font-size:.85rem}
+.an-part small{color:var(--muted)} .an-part b{text-align:right;font-variant-numeric:tabular-nums}
+.an-pbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.an-pbar i{display:block;height:100%} .an-pbar i.lo{background:var(--bad)} .an-pbar i.mid{background:var(--rope)} .an-pbar i.hi{background:var(--good)}
+.an-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.an-c{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;padding:9px 11px;border-radius:10px;border:1px solid var(--line);border-left-width:4px;background:var(--surface)}
+.an-c .an-lv{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding-top:3px;white-space:nowrap;min-width:72px}
+.an-c .an-tx{font-size:.92rem;line-height:1.38}
+.an-c .an-ar{grid-column:2;font-size:.7rem;color:var(--muted)}
+.an-c.zle{border-left-color:var(--bad)} .an-c.zle .an-lv{color:var(--bad)}
+.an-c.slabo{border-left-color:var(--h5)} .an-c.slabo .an-lv{color:var(--h5)}
+.an-c.popraw{border-left-color:var(--rope)} .an-c.popraw .an-lv{color:var(--gold-word)}
+.an-c.dobrze{border-left-color:var(--good)} .an-c.dobrze .an-lv{color:var(--good)}
+@media (max-width:480px){.an-c{grid-template-columns:1fr}.an-c .an-ar{grid-column:1}.an-c .an-lv{padding-top:0}}
+.an-filter{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
+.an-filter .chip[aria-pressed="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.an-hbar{display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--line);margin:8px 0}
+.an-hbar i{display:block;height:100%}
+.an-cell{min-width:80px;width:40%} .an-cell .an-hbar{margin:0;height:10px}
+.an-sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.an-zl span{margin-right:8px;white-space:nowrap}
+.an-goal{margin:10px 0 0;font-size:.9rem;padding:8px 11px;border-radius:10px;background:var(--accent-soft)}
+.an-goal.bad{background:var(--bad-soft);color:var(--bad);font-weight:600}
+.an-form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:8px}
+.an-form .sc-field{flex:1 1 120px;min-width:0}
+.an-form .sc-field.wide{flex-basis:100%}
+.an-form input,.an-form select{width:100%;min-width:0}
+.an-big{margin:6px 0;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap} .an-big b{font-family:var(--f-display);font-size:2.2rem;line-height:1}
+.an-load,.an-line{width:100%;max-width:520px;height:auto;display:block;margin:8px 0}
+.an-load rect{fill:var(--accent);opacity:.5} .an-load rect.cur{opacity:1}
+.an-load text,.an-line text{font-size:9px;fill:var(--muted);text-anchor:middle}
+.an-load text.v{fill:var(--fg);font-weight:600}
+.an-line polyline{fill:none;stroke-width:2}
+.an-line text.end{text-anchor:end}
+#anRoot .seg.an-seg{margin:12px 0 0;display:inline-flex;flex-wrap:wrap;gap:2px;max-width:100%}
+#anRoot table.an-tech :is(th,td){padding:7px 6px}
+.an-goals{list-style:none;padding:0;margin:0 0 6px;display:flex;flex-direction:column;gap:6px}
+.an-goals li{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.an-goals small{display:block;margin-top:3px;font-size:.82rem}
+table.an-pts th small,table.an-tech th small{display:block;font-weight:400;color:var(--muted);font-size:.72rem;text-transform:none;letter-spacing:0}
+table.an-tech td small{display:block;font-size:.75rem} table.an-zt td small{color:var(--muted);margin-left:4px}
+.an-setl{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
+.an-setl li{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--surface)}
+.an-sn small{color:var(--muted);margin-left:8px;font-size:.8rem}
+.an-sv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:6px}
+.an-sv span{display:flex;flex-direction:column;min-width:0} .an-sv small{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;line-height:1.2}
+.an-sv b{font-variant-numeric:tabular-nums;font-size:.95rem;white-space:nowrap}
+@media (max-width:420px){.an-sv{grid-template-columns:repeat(2,minmax(0,1fr))}}
+table.an-dow td.bad{color:var(--bad);font-weight:700}
+.an-tr h3{margin-top:14px} .an-tr h3:first-child{margin-top:0}
+/* Na tle rówieśników */
+.an-peerl{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-direction:column;gap:8px}
+.an-peer{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--surface)}
+.an-pn .meta{margin-left:6px}
+.an-pscale{width:100%;height:auto;display:block;margin:6px 0 2px}
+.an-pscale .base{fill:var(--line)}
+.an-pscale rect.z1{fill:var(--accent);opacity:.18} .an-pscale rect.z2{fill:var(--accent);opacity:.35} .an-pscale rect.z3{fill:var(--accent);opacity:.6} .an-pscale rect.z4{fill:var(--rope)}
+.an-pscale .tk{stroke:var(--fg);stroke-width:1.5} .an-pscale .tk.ny{stroke-dasharray:3 2;stroke:var(--muted)} .an-pscale .tk.ii{stroke:var(--muted)}
+.an-pscale text{font-size:9px;fill:var(--muted);text-anchor:middle} .an-pscale text.cl.own{fill:var(--fg);font-weight:700}
+.an-pscale .me{fill:var(--bad);stroke:var(--surface);stroke-width:2} .an-pscale .me.far{fill:var(--surface);stroke:var(--bad);stroke-width:2} .an-pscale text.far{fill:var(--bad);font-size:12px;font-weight:700}
+.an-pt{margin:2px 0 0;font-size:.82rem;color:var(--muted)} .an-pt .d.up{color:var(--good);font-weight:600}
+.an-plegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.75rem;color:var(--muted);margin:8px 0 0}
+.an-plegend i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:4px;vertical-align:0;background:var(--accent)}
+.an-plegend i.z1{opacity:.18} .an-plegend i.z2{opacity:.35} .an-plegend i.z3{opacity:.6} .an-plegend i.z4{background:var(--rope)}
+.an-plegend i.tk{width:2px;height:12px;background:var(--fg);vertical-align:-2px} .an-plegend i.me{width:10px;height:10px;border-radius:50%;background:var(--bad)}
+#anRoot .seg.an-pseg{display:inline-flex;margin-top:6px}
+#anRoot :is(input[type="text"],input[type="date"],select){font:inherit;color:var(--fg);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0;max-width:100%}
 .fr-big{display:flex;align-items:center;gap:16px}
 .fr-pool{position:relative;flex:none;width:128px;height:128px;display:grid;place-items:center}
 .fr-pool svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
@@ -1120,11 +1204,12 @@ button.pl-item{cursor:pointer}
     </div>
     <label class="upload" for="dataFile">+ Dodaj dane<input type="file" id="dataFile" accept=".csv,.fit,.zip,text/csv,application/zip,application/octet-stream" multiple></label>
   </header>
-  <nav class="tabs swimtabs" role="tablist" aria-label="Widok">
+  <nav class="tabs swimtabs five" role="tablist" aria-label="Widok">
     <button class="tab" role="tab" id="tab-ov" aria-controls="p-ov" aria-selected="true">Przegląd</button>
     <button class="tab" role="tab" id="tab-tr" aria-controls="p-tr" aria-selected="false">Treningi</button>
     <button class="tab" role="tab" id="tab-rec" aria-controls="p-rec" aria-selected="false">Rekordy</button>
     <button class="tab" role="tab" id="tab-fr" aria-controls="p-fr" aria-selected="false">Frekwencja</button>
+    <button class="tab" role="tab" id="tab-an" aria-controls="p-an" aria-selected="false">Analiza</button>
   </nav>
   <div class="rope" aria-hidden="true"></div>
   <p class="msg" id="msg" hidden></p>
@@ -1184,6 +1269,11 @@ button.pl-item{cursor:pointer}
   <!-- ================= ATTENDANCE ================= -->
   <section class="tabpanel" id="p-fr" role="tabpanel" aria-labelledby="tab-fr" hidden>
     <div id="frRoot"></div>
+  </section>
+
+  <!-- ================= ANALYSIS (27.10.2026) ================= -->
+  <section class="tabpanel" id="p-an" role="tabpanel" aria-labelledby="tab-an" hidden>
+    <div id="anRoot"></div>
   </section>
 
   <!-- ================= RECORDS ================= -->
@@ -1392,6 +1482,10 @@ button.pl-item{cursor:pointer}
 <script src="sleep.js"></script>
 <script src="birthdays.js"></script>
 <script src="settings.js"></script>
+<script src="swimstats.js"></script>
+<script src="swimpeers.js"></script>
+<script src="swimcoach.js"></script>
+<script src="swimanalysis.js"></script>
 <script src="plan.js"></script>
 <script>
 const SAMPLE_CSV = /*SAMPLE_CSV*/null;
@@ -1419,12 +1513,13 @@ function showView(v){
   updateBadges();
   try{ window.scrollTo({top:0}); }catch(e){}
 }
-const TAB_HASH = { ov: "#przeglad", tr: "#treningi", rec: "#rekordy", fr: "#frekwencja" };
+const TAB_HASH = { ov: "#przeglad", tr: "#treningi", rec: "#rekordy", fr: "#frekwencja", an: "#analiza" };
 const Attendance = window.RytmAttendance;
 const School = window.RytmSchool;
 const Records = window.RytmRecords;
 const Goals = window.RytmGoals, Portfolio = window.RytmPortfolio, Study = window.RytmStudy, Savings = window.RytmSavings, Plan = window.RytmPlan;
 const Homework = window.RytmHomework, Sleep = window.RytmSleep, Birthdays = window.RytmBirthdays, Settings = window.RytmSettings;
+const Analysis = window.RytmSwimAnalysis;
 // "now" for the app: the phone's time, or the wall clock of the zone chosen in Ustawienia
 const appNow = () => Settings.now();
 document.addEventListener("click", e => { const b = e.target.closest("[data-goview]"); if(b) showView(b.dataset.goview); });
@@ -1450,14 +1545,15 @@ function renderMore(){
 }
 function showTab(which){
   swimTab = which;
-  for(const t of ["ov","tr","rec","fr"]){ $("tab-"+t).setAttribute("aria-selected", t === which); $("p-"+t).hidden = t !== which; }
+  for(const t of ["ov","tr","rec","fr","an"]){ $("tab-"+t).setAttribute("aria-selected", t === which); $("p-"+t).hidden = t !== which; }
   setHash(TAB_HASH[which]);
   if(which === "ov") render();
   if(which === "tr") Trainings.render();
   if(which === "fr") Attendance.render();
+  if(which === "an") Analysis.render();
 }
 document.querySelectorAll(".bb").forEach(b => b.addEventListener("click", () => showView(b.dataset.view)));
-for(const t of ["ov","tr","rec","fr"]) $("tab-"+t).addEventListener("click", () => showTab(t));
+for(const t of ["ov","tr","rec","fr","an"]) $("tab-"+t).addEventListener("click", () => showTab(t));
 
 /* ---------------- CSV ---------------- */
 function parseCSV(text){
@@ -1513,6 +1609,7 @@ function refreshTrainings(){
   const fit = {}; for(const [id,p] of Object.entries(store.acts)) fit[id] = Swim.unpack(p);
   Trainings.setData(all, fit, store.hidden);
   Attendance.setTrainings(Trainings.list());
+  Analysis.invalidate(); if(!$("v-swim").hidden && swimTab === "an") Analysis.render();
   const has = Trainings.list().some(t=>t.swim);
   $("empty").hidden = has; $("dash").hidden = !has;
   if(!$("v-swim").hidden && swimTab === "ov") render();
@@ -1863,7 +1960,7 @@ if(window.claude && typeof window.claude.use === "function") window.claude.use("
 function currentState(){
   return { csvText, fit:{ acts:store.acts, bad:store.bad, last:store.last, hidden:store.hidden }, habits: Habits.exportState(), attendance: Attendance.exportState(), school: School.exportState(), manualRecords: Records.exportState(),
     plan: Plan.exportState(), goals: Goals.exportState(), portfolio: Portfolio.exportState(), study: Study.exportState(), savings: Savings.exportState(),
-    homework: Homework.exportState(), sleep: Sleep.exportState(), birthdays: Birthdays.exportState(), prefs: Settings.exportState() };
+    homework: Homework.exportState(), sleep: Sleep.exportState(), birthdays: Birthdays.exportState(), prefs: Settings.exportState(), swim: Analysis.exportState() };
 }
 function currentSummary(){ return Backup.build(currentState(), { csvRows: all.length }).summary; }
 
@@ -2085,6 +2182,13 @@ function planWidgets(T){
 }
 // what the homework list needs: Szkoła's subjects and the timetable (the next lesson of a subject = the default day)
 function homeworkSources(){ return { subjects: School.exportState().subjects.map(s=>({ id:s.id, name:s.name })), lessonsOn: k=>Plan.lessonsOn(Plan.state, k) }; }
+// for Pływanie → Analiza: the trainings, records, attendance, sleep and the days of school tests (all from this device)
+function analysisSources(){
+  return { trainings: ()=>Trainings.list(), bad: ()=>store.bad, records: (acts, bad)=>Records.merge(acts, bad), attendance: ()=>Attendance.stats(),
+    sleep: ()=>Sleep.exportState(), exams: ()=>School.exportState().tests.map(t=>t.date),
+    sig: ()=>{ const r = Records.exportState(); return JSON.stringify(store.bad) + "|" + (r.entries || []).length + "|" + JSON.stringify(r.entries || []).length; },
+    visible: ()=>!$("v-swim").hidden && swimTab === "an", redrawTraining: ()=>Trainings.render(), goAttendance: ()=>showTab("fr") };
+}
 // for sleep: was there a training that started after 16:00 on day k
 function sleepSources(){ return { eveningTraining: k=>Trainings.list().some(t=>t && t.date instanceof Date && Plan.dayKey(t.date) === k && t.date.getHours() >= 16) }; }
 const refreshToday = ()=>{ if(curView === "today") Plan.render(); };
@@ -2101,7 +2205,7 @@ function attendancePersist(){
     openTraining: id=>openTraining(id) };
 }
 // Ustawienia: the time zone moves "now" in every section; the language switches the screen (i18n.js)
-const CLOCKED = () => [Attendance, School, Records, Goals, Portfolio, Study, Savings, Homework, Sleep, Birthdays, Plan, Habits];
+const CLOCKED = () => [Attendance, School, Records, Goals, Portfolio, Study, Savings, Homework, Sleep, Birthdays, Plan, Habits, Analysis];
 function applyZone(){
   const fn = ()=>Settings.now();
   for(const m of CLOCKED()) if(m && m.setClock) m.setClock(fn);
@@ -2113,6 +2217,7 @@ let zoneSet = false;
 function applyUnits(){
   if(Trainings.list().length){ Trainings.render(); if(swimTab === "ov") render(); }
   Attendance.render();
+  Analysis.invalidate(); Analysis.render();
 }
 function applyLang(lang){
   if(!window.RytmI18n || RytmI18n.lang === lang) return;
@@ -2132,7 +2237,7 @@ function userStrings(){
   const H = Habits._state ? Habits._state() : null;
   if(H) walk({ habits: (H.habits || []).map(h=>({ name: h.name, unit: h.unit })), notes: H.notes, skips: H.skips }, false);
   // the app's own category names (Urodziny, Zawody…) are not the user's: they are translated
-  for(const m of [School, Records, Goals, Portfolio, Study, Plan, Homework, Birthdays]) { try{ const st = m.exportState(); if(m === Plan) delete st.cats; walk(st, false); }catch(e){} }
+  for(const m of [School, Records, Goals, Portfolio, Study, Plan, Homework, Birthdays, Analysis]) { try{ const st = m.exportState(); if(m === Plan) delete st.cats; walk(st, false); }catch(e){} }
   return out;
 }
 if(window.RytmI18n) RytmI18n.setUserStrings(userStrings);
@@ -2163,6 +2268,7 @@ function useData(){
   Homework.attach(partPersist("homework", { sources: homeworkSources, go: planGo, onChange: refreshToday }));
   Sleep.attach(partPersist("sleep", { sources: sleepSources, go: planGo, onChange: refreshToday }));
   // a change made while looking at Urodziny (e.g. a new person in a week) is already read
+  Analysis.attach(partPersist("swim", analysisSources()));
   Birthdays.attach(partPersist("birthdays", { go: planGo, onChange: ()=>{ if(curView === "birthdays") Birthdays.markSeen(); refreshToday(); updateBadges(); } }));
   Plan.attach(partPersist("plan", { sources: planSources, go: planGo, saveTest: t=>School.saveTest(t), deleteTest: id=>School.deleteTest(id) }));
   const csv = RytmData.bridge.loadCsv();
@@ -2174,11 +2280,12 @@ function useData(){
   if(!$("v-swim").hidden) showTab(swimTab);
   updateBadges();
 }
-Trainings.mount({ onDelete: deleteTraining, comp: t=>Attendance.compOf(t), compDay: t=>Attendance.compDay(t), setNotComp: (id, on)=>Attendance.setNotComp(id, on), canMark: ()=>Attendance.canWrite() });
+Trainings.mount({ onDelete: deleteTraining, comp: t=>Attendance.compOf(t), compDay: t=>Attendance.compDay(t), setNotComp: (id, on)=>Attendance.setNotComp(id, on), canMark: ()=>Attendance.canWrite(),
+  coach: t=>Analysis.trainingBlock(t) });
 Attendance.mount();
 School.mount();
 Records.mount();
-Goals.mount(); Portfolio.mount(); Study.mount(); Savings.mount(); Plan.mount(); Homework.mount(); Sleep.mount(); Birthdays.mount(); Settings.mount();
+Goals.mount(); Portfolio.mount(); Study.mount(); Savings.mount(); Plan.mount(); Homework.mount(); Sleep.mount(); Birthdays.mount(); Settings.mount(); Analysis.mount();
 $("recAdd").addEventListener("click", ()=>{ if(!demo) Records.openAdd({ pool: recPool || undefined }); });
 window.RytmApp = { useData, exportBackup };
 window.RytmApp.ready = (async ()=>{
@@ -2193,7 +2300,7 @@ window.RytmApp.ready = (async ()=>{
   if(!RytmData.bridge){ $("bootMsg").textContent = "Nie udało się wczytać danych."; return; }
   useData();
   Habits.mount();
-  const startTab = { "#rekordy": "rec", "#przeglad": "ov", "#treningi": "tr", "#frekwencja": "fr" }[location.hash];
+  const startTab = { "#rekordy": "rec", "#przeglad": "ov", "#treningi": "tr", "#frekwencja": "fr", "#analiza": "an" }[location.hash];
   if(RytmData.reason === "przed-migracja"){ showView("habits"); RytmData.showMigration(); }
   else if(startTab){ swimTab = startTab; showView("swim"); }
   else { const byHash = Object.fromEntries(Object.entries(VIEW_HASH).map(([v,h])=>[h,v])); showView(byHash[location.hash] || "today"); }
